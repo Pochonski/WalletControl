@@ -11,6 +11,8 @@
 import { ACTION_TYPES } from '../../app/state/actions.js'
 import { clientesDataAdapter } from '../../adapters/dataAdapters/clientesDataAdapter.js'
 import { showSuccess, showError } from '../../common/uiHelpers.js'
+import { fileUploadManager } from '../../storage/fileUploadManager.js'
+import { fileManager } from '../../storage/fileManager.js'
 
 export const initClientesController = (dom, store) => {
   const clientesSection = dom.clientes
@@ -63,10 +65,24 @@ export const initClientesController = (dom, store) => {
         payload: nuevoCliente
       })
 
-      // Sincronizar con Supabase
       try {
         store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
 
+        // Handle file uploads
+        const uploadResults = await handleClientFileUploads(formulario, nuevoCliente.id)
+
+        // Add file paths to client data
+        if (uploadResults.fotoRostro) {
+          nuevoCliente.foto_rostro_path = uploadResults.fotoRostro
+        }
+        if (uploadResults.cedulaFrente) {
+          nuevoCliente.cedula_frente_path = uploadResults.cedulaFrente
+        }
+        if (uploadResults.cedulaReverso) {
+          nuevoCliente.cedula_reverso_path = uploadResults.cedulaReverso
+        }
+
+        // Sincronizar con Supabase
         const guardado = await clientesDataAdapter.save(nuevoCliente)
 
         // Si fue temporal, actualizar con ID real
@@ -83,6 +99,7 @@ export const initClientesController = (dom, store) => {
 
         showSuccess('Cliente creado exitosamente')
         formulario.reset()
+        clearPhotoPreviews(formulario)
       } catch (err) {
         console.error('[clientesController] Save error:', err)
         showError('Error: ' + err.message)
@@ -90,6 +107,14 @@ export const initClientesController = (dom, store) => {
         store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
       }
     })
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // PHOTO PREVIEW HANDLERS
+  // ────────────────────────────────────────────────────────────────
+
+  if (formulario) {
+    setupPhotoPreviews(formulario)
   }
 
   // ────────────────────────────────────────────────────────────────
@@ -147,7 +172,7 @@ export const initClientesController = (dom, store) => {
   // 5. RENDER de tabla
   // ────────────────────────────────────────────────────────────────
 
-  const render = () => {
+  const render = async () => {
     const { clientes } = store.getState()
     const { list } = clientes
 
@@ -168,12 +193,27 @@ export const initClientesController = (dom, store) => {
 
     const fragment = document.createDocumentFragment()
 
-    list.forEach(cliente => {
+    // Process clients sequentially to avoid overwhelming the browser with concurrent requests
+    for (const cliente of list) {
       const row = document.createElement('tr')
       const riesgoClass = cliente.nivel_riesgo === 'HIGH' ? 'riesgo-high'
         : cliente.nivel_riesgo === 'MEDIUM' ? 'riesgo-medium' : 'riesgo-low'
 
+      // Get photo URL if available
+      let photoHtml = '<span style="color: #999;">Sin foto</span>'
+      if (cliente.foto_rostro_path) {
+        try {
+          const photoResult = await fileManager.getFileUrl('client-photos', cliente.foto_rostro_path)
+          if (photoResult.success) {
+            photoHtml = `<img src="${photoResult.url}" alt="Foto" style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;">`
+          }
+        } catch (err) {
+          console.error('Error loading client photo:', err)
+        }
+      }
+
       row.innerHTML = `
+        <td style="text-align: center;">${photoHtml}</td>
         <td>${cliente.nombre}</td>
         <td>${cliente.cedula || '-'}</td>
         <td>${cliente.telefono || '-'}</td>
@@ -217,7 +257,7 @@ export const initClientesController = (dom, store) => {
       }
 
       fragment.appendChild(row)
-    })
+    }
 
     tabla.appendChild(fragment)
   }
@@ -238,5 +278,132 @@ export const initClientesController = (dom, store) => {
   // ────────────────────────────────────────────────────────────────
 
   cargarClientes()
-  render()
+  render() // async call
+}
+
+// ──────────────────────────────────────────────────────────────────
+// HELPER FUNCTIONS
+// ──────────────────────────────────────────────────────────────────
+
+/**
+ * Handles uploading client photos and ID documents
+ */
+async function handleClientFileUploads(form, clientId) {
+  const results = {
+    fotoRostro: null,
+    cedulaFrente: null,
+    cedulaReverso: null
+  }
+
+  // Get file inputs
+  const fotoRostroInput = form.querySelector('#upload-foto-rostro')
+  const cedulaFrenteInput = form.querySelector('#upload-cedula-frente')
+  const cedulaReversoInput = form.querySelector('#upload-cedula-reverso')
+
+  // Upload face photo
+  if (fotoRostroInput?.files[0]) {
+    try {
+      const result = await fileUploadManager.uploadClientPhoto(
+        fotoRostroInput.files[0],
+        clientId,
+        store.getState().auth.user?.id
+      )
+      if (result.success) {
+        results.fotoRostro = result.path
+      }
+    } catch (err) {
+      console.error('Error uploading face photo:', err)
+    }
+  }
+
+  // Upload ID front
+  if (cedulaFrenteInput?.files[0]) {
+    try {
+      const result = await fileUploadManager.uploadClientIdDocument(
+        cedulaFrenteInput.files[0],
+        clientId,
+        store.getState().auth.user?.id,
+        'cedula-frente'
+      )
+      if (result.success) {
+        results.cedulaFrente = result.path
+      }
+    } catch (err) {
+      console.error('Error uploading ID front:', err)
+    }
+  }
+
+  // Upload ID reverse
+  if (cedulaReversoInput?.files[0]) {
+    try {
+      const result = await fileUploadManager.uploadClientIdDocument(
+        cedulaReversoInput.files[0],
+        clientId,
+        store.getState().auth.user?.id,
+        'cedula-reverso'
+      )
+      if (result.success) {
+        results.cedulaReverso = result.path
+      }
+    } catch (err) {
+      console.error('Error uploading ID reverse:', err)
+    }
+  }
+
+  return results
+}
+
+/**
+ * Clears photo previews when form is reset
+ */
+function clearPhotoPreviews(form) {
+  const previews = form.querySelectorAll('.photo-preview')
+  previews.forEach(preview => {
+    preview.innerHTML = ''
+    preview.classList.add('hidden')
+  })
+}
+
+/**
+ * Sets up photo preview handlers for file inputs
+ */
+function setupPhotoPreviews(form) {
+  const fileInputs = [
+    { inputId: '#upload-foto-rostro', previewId: '#preview-foto-rostro' },
+    { inputId: '#upload-cedula-frente', previewId: '#preview-cedula-frente' },
+    { inputId: '#upload-cedula-reverso', previewId: '#preview-cedula-reverso' }
+  ]
+
+  fileInputs.forEach(({ inputId, previewId }) => {
+    const input = form.querySelector(inputId)
+    const preview = form.querySelector(previewId)
+
+    if (input && preview) {
+      input.addEventListener('change', (e) => {
+        const file = e.target.files[0]
+        if (file) {
+          showImagePreview(file, preview)
+        } else {
+          preview.innerHTML = ''
+          preview.classList.add('hidden')
+        }
+      })
+    }
+  })
+}
+
+/**
+ * Shows image preview in the specified element
+ */
+function showImagePreview(file, previewElement) {
+  if (!file.type.startsWith('image/')) {
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    previewElement.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 150px; border-radius: 4px;">`
+    previewElement.classList.remove('hidden')
+  }
+  reader.readAsDataURL(file)
 }
