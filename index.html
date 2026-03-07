@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1d4ed8">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Prestamistas</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div id="app-root">
+
+    <!-- ================================================================== -->
+    <!-- OVERLAYS GLOBALES                                                   -->
+    <!-- ================================================================== -->
+    <div id="loading-overlay" class="loading-overlay hidden" aria-hidden="true">
+      <div class="spinner"></div>
+    </div>
+
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- ================================================================== -->
+    <!-- VIEW: LOGIN / REGISTRO (sin navegacion)                            -->
+    <!-- ================================================================== -->
+    <section id="view-login" class="view view-auth">
+      <div class="login-container">
+        <div class="login-logo">
+          <div class="login-logo-icon">$</div>
+          <h1>Prestamistas</h1>
+          <p>Gestión de préstamos e inversiones</p>
+        </div>
+
+        <form id="login-form" class="login-form" novalidate autocomplete="on">
+          <div id="register-name-group" class="form-group hidden">
+            <label for="login-name">Nombre completo</label>
+            <input
+              id="login-name"
+              type="text"
+              placeholder="Juan Pérez"
+              autocomplete="name"
+              minlength="2"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="login-email">Correo electrónico</label>
+            <input
+              id="login-email"
+              type="email"
+              placeholder="usuario@ejemplo.com"
+              autocomplete="email"
+              required
+              inputmode="email"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="login-password">Contraseña</label>
+            <input
+              id="login-password"
+              type="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+              minlength="6"
+            >
+          </div>
+
+          <div id="login-error" class="form-error hidden" role="alert"></div>
+
+          <button id="login-submit" type="submit" class="btn btn-primary btn-full">
+            Iniciar sesión
+          </button>
+        </form>
+
+        <button id="register-toggle" class="btn-link" type="button">
+          ¿No tienes cuenta? <strong>Regístrate gratis</strong>
+        </button>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- APP SHELL (solo visible cuando autenticado)                        -->
+    <!-- ================================================================== -->
+    <div id="app-shell" class="hidden">
+
+      <!-- Header -->
+      <header id="app-header" class="app-header">
+        <button id="btn-back" class="btn-icon hidden" aria-label="Volver" type="button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <h1 id="app-title" class="app-title">Prestamistas</h1>
+        <div class="header-actions">
+          <span id="sync-indicator" class="sync-indicator hidden" title="Cambios pendientes de sincronizar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"/>
+              <polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+          </span>
+          <button id="btn-logout" class="btn-icon" aria-label="Cerrar sesión" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main content area (padded for header + bottom nav) -->
+      <main id="main-content" class="main-content">
+
+        <!-- ============================================================== -->
+        <!-- DASHBOARD                                                       -->
+        <!-- ============================================================== -->
+        <section id="view-dashboard" class="view hidden">
+          <div id="dashboard-metrics" class="metrics-grid"></div>
+          <div id="dashboard-alerts" class="section-block"></div>
+          <div id="dashboard-charts" class="section-block"></div>
+          <div id="dashboard-quick-actions" class="quick-actions-grid"></div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- CLIENTES                                                        -->
+        <!-- ============================================================== -->
+        <section id="view-clientes" class="view hidden">
+          <div class="view-toolbar">
+            <div class="search-wrapper">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input id="clientes-search" type="search" class="search-input" placeholder="Nombre o teléfono...">
+            </div>
+            <button id="btn-nuevo-cliente" class="btn btn-primary btn-sm" type="button">+ Nuevo</button>
+          </div>
+          <div id="clientes-filter-bar" class="filter-bar"></div>
+          <div id="clientes-list" class="card-list"></div>
+        </section>
+
+        <!-- Detalle cliente (panel completo, se muestra sobre la lista) -->
+        <section id="view-cliente-detail" class="view hidden"></section>
+
+        <!-- Formulario nuevo/editar cliente -->
+        <section id="view-cliente-form" class="view hidden">
+          <form id="cliente-form" novalidate>
+            <div class="form-section">
+              <h3 class="form-section-title">Datos personales</h3>
+              <div class="form-group">
+                <label for="cliente-nombre">Nombre completo *</label>
+                <input id="cliente-nombre" type="text" placeholder="Juan Pérez" required>
+              </div>
+              <div class="form-group">
+                <label for="cliente-cedula">Cédula / Documento *</label>
+                <input id="cliente-cedula" type="text" placeholder="000-0000000-0" required inputmode="numeric">
+              </div>
+              <div class="form-group">
+                <label for="cliente-telefono">Teléfono</label>
+                <input id="cliente-telefono" type="tel" placeholder="809-555-0000" inputmode="tel">
+              </div>
+              <div class="form-group">
+                <label for="cliente-email">Correo electrónico</label>
+                <input id="cliente-email" type="email" placeholder="cliente@ejemplo.com" inputmode="email">
+              </div>
+              <div class="form-group">
+                <label for="cliente-direccion">Dirección</label>
+                <textarea id="cliente-direccion" rows="2" placeholder="Calle, número, ciudad..."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="cliente-nacimiento">Fecha de nacimiento</label>
+                <input id="cliente-nacimiento" type="date">
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="form-section-title">Contacto alternativo</h3>
+              <div class="form-group">
+                <label for="cliente-contacto-emergencia">Contacto de emergencia</label>
+                <input id="cliente-contacto-emergencia" type="text" placeholder="Nombre del contacto">
+              </div>
+              <div class="form-group">
+                <label for="cliente-telefono-emergencia">Teléfono de emergencia</label>
+                <input id="cliente-telefono-emergencia" type="tel" inputmode="tel">
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="form-section-title">Clasificación</h3>
+              <div class="form-group">
+                <label for="cliente-riesgo">Nivel de riesgo</label>
+                <select id="cliente-riesgo">
+                  <option value="BAJO">Bajo</option>
+                  <option value="MEDIO">Medio</option>
+                  <option value="ALTO">Alto</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="cliente-notas">Notas internas</label>
+                <textarea id="cliente-notas" rows="3" placeholder="Observaciones sobre el cliente..."></textarea>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3 class="form-section-title">Documentos de identidad</h3>
+              <div id="upload-fotos-cliente" class="upload-area">
+                <div class="upload-item">
+                  <label>Foto rostro</label>
+                  <input id="upload-foto-rostro" type="file" accept="image/jpeg,image/png" capture="user">
+                  <div id="preview-foto-rostro" class="photo-preview hidden"></div>
+                </div>
+                <div class="upload-item">
+                  <label>Cédula frente</label>
+                  <input id="upload-cedula-frente" type="file" accept="image/jpeg,image/png" capture="environment">
+                  <div id="preview-cedula-frente" class="photo-preview hidden"></div>
+                </div>
+                <div class="upload-item">
+                  <label>Cédula reverso</label>
+                  <input id="upload-cedula-reverso" type="file" accept="image/jpeg,image/png" capture="environment">
+                  <div id="preview-cedula-reverso" class="photo-preview hidden"></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="cliente-form-error" class="form-error hidden" role="alert"></div>
+            <div class="form-actions">
+              <button id="btn-cancel-cliente" type="button" class="btn btn-secondary">Cancelar</button>
+              <button id="btn-submit-cliente" type="submit" class="btn btn-primary">Guardar cliente</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- PRESTAMOS                                                       -->
+        <!-- ============================================================== -->
+        <section id="view-prestamos" class="view hidden">
+          <div class="view-toolbar">
+            <div class="search-wrapper">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input id="prestamos-search" type="search" class="search-input" placeholder="Buscar cliente...">
+            </div>
+            <button id="btn-nuevo-prestamo" class="btn btn-primary btn-sm" type="button">+ Nuevo</button>
+          </div>
+          <div id="prestamos-filter-bar" class="filter-bar"></div>
+          <div id="prestamos-list" class="card-list"></div>
+        </section>
+
+        <section id="view-prestamo-detail" class="view hidden"></section>
+
+        <section id="view-prestamo-form" class="view hidden">
+          <form id="prestamo-form" novalidate>
+            <div class="form-section">
+              <h3 class="form-section-title">Cliente</h3>
+              <div class="form-group">
+                <label for="prestamo-cliente-id">Cliente *</label>
+                <select id="prestamo-cliente-id" required>
+                  <option value="">Seleccionar cliente...</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3 class="form-section-title">Condiciones del préstamo</h3>
+              <div class="form-group">
+                <label for="prestamo-monto">Monto a prestar *</label>
+                <input id="prestamo-monto" type="number" min="1" step="0.01" placeholder="0.00" required inputmode="decimal">
+              </div>
+              <div class="form-group">
+                <label for="prestamo-tasa">Tasa de interés mensual (%) *</label>
+                <input id="prestamo-tasa" type="number" min="0" step="0.01" placeholder="10.00" required inputmode="decimal">
+              </div>
+              <div class="form-group">
+                <label for="prestamo-tipo">Tipo de interés *</label>
+                <select id="prestamo-tipo" required>
+                  <option value="SIMPLE">Simple (interés fijo sobre capital)</option>
+                  <option value="COMPUESTO">Compuesto (anualidad)</option>
+                  <option value="MIXTO">Mixto (sobre saldo insoluto)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="prestamo-frecuencia">Frecuencia de pago *</label>
+                <select id="prestamo-frecuencia" required>
+                  <option value="MENSUAL">Mensual</option>
+                  <option value="QUINCENAL">Quincenal</option>
+                  <option value="SEMANAL">Semanal</option>
+                  <option value="DIARIA">Diaria</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="prestamo-fecha-inicio">Fecha inicio *</label>
+                  <input id="prestamo-fecha-inicio" type="date" required>
+                </div>
+                <div class="form-group">
+                  <label for="prestamo-fecha-fin">Fecha fin *</label>
+                  <input id="prestamo-fecha-fin" type="date" required>
+                </div>
+              </div>
+            </div>
+            <div id="prestamo-resumen" class="loan-summary hidden"></div>
+            <div id="prestamo-form-error" class="form-error hidden" role="alert"></div>
+            <div class="form-actions">
+              <button id="btn-cancel-prestamo" type="button" class="btn btn-secondary">Cancelar</button>
+              <button id="btn-submit-prestamo" type="submit" class="btn btn-primary">Crear préstamo</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- PAGOS                                                           -->
+        <!-- ============================================================== -->
+        <section id="view-pagos" class="view hidden">
+          <div class="view-toolbar">
+            <span class="toolbar-title">Historial de pagos</span>
+            <button id="btn-nuevo-pago" class="btn btn-primary btn-sm" type="button">+ Registrar</button>
+          </div>
+          <div id="pagos-list" class="card-list"></div>
+        </section>
+
+        <section id="view-pago-form" class="view hidden">
+          <form id="pago-form" novalidate>
+            <div class="form-section">
+              <h3 class="form-section-title">Cuota a pagar</h3>
+              <div id="pago-cuota-info" class="info-card"></div>
+            </div>
+            <div class="form-section">
+              <h3 class="form-section-title">Datos del pago</h3>
+              <div class="form-group">
+                <label for="pago-monto">Monto *</label>
+                <input id="pago-monto" type="number" min="0.01" step="0.01" placeholder="0.00" required inputmode="decimal">
+              </div>
+              <div class="form-group">
+                <label for="pago-fecha">Fecha de pago *</label>
+                <input id="pago-fecha" type="date" required>
+              </div>
+              <div class="form-group">
+                <label for="pago-metodo">Método de pago *</label>
+                <select id="pago-metodo" required>
+                  <option value="EFECTIVO">Efectivo</option>
+                  <option value="TRANSFERENCIA">Transferencia</option>
+                  <option value="CHEQUE">Cheque</option>
+                  <option value="OTRO">Otro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="pago-referencia">Referencia (opcional)</label>
+                <input id="pago-referencia" type="text" placeholder="Nro. transferencia, cheque...">
+              </div>
+              <div class="form-group">
+                <label for="pago-notas">Notas</label>
+                <textarea id="pago-notas" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3 class="form-section-title">Comprobante (opcional)</h3>
+              <div class="upload-item">
+                <input id="upload-comprobante" type="file" accept="image/jpeg,image/png,application/pdf" capture="environment">
+                <div id="preview-comprobante" class="photo-preview hidden"></div>
+              </div>
+            </div>
+            <div id="pago-form-error" class="form-error hidden" role="alert"></div>
+            <div class="form-actions">
+              <button id="btn-cancel-pago" type="button" class="btn btn-secondary">Cancelar</button>
+              <button id="btn-submit-pago" type="submit" class="btn btn-primary">Registrar pago</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- ACTIVOS                                                         -->
+        <!-- ============================================================== -->
+        <section id="view-activos" class="view hidden">
+          <div class="view-toolbar">
+            <div class="search-wrapper">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input id="activos-search" type="search" class="search-input" placeholder="Buscar activo...">
+            </div>
+            <button id="btn-nuevo-activo" class="btn btn-primary btn-sm" type="button">+ Nuevo</button>
+          </div>
+          <div id="activos-metrics" class="metrics-grid"></div>
+          <div id="activos-filter-bar" class="filter-bar"></div>
+          <div id="activos-list" class="card-list"></div>
+        </section>
+
+        <section id="view-activo-detail" class="view hidden"></section>
+
+        <section id="view-activo-form" class="view hidden">
+          <form id="activo-form" novalidate>
+            <div class="form-section">
+              <h3 class="form-section-title">Información del activo</h3>
+              <div class="form-group">
+                <label for="activo-nombre">Nombre / Descripción *</label>
+                <input id="activo-nombre" type="text" placeholder="Ej: iPhone 15 Pro Max" required>
+              </div>
+              <div class="form-group">
+                <label for="activo-categoria">Categoría *</label>
+                <select id="activo-categoria" required>
+                  <option value="ELECTRONICA">Electrónica</option>
+                  <option value="VEHICULOS">Vehículos</option>
+                  <option value="JOYERIA">Joyería</option>
+                  <option value="MAQUINARIA">Maquinaria</option>
+                  <option value="INMUEBLES">Inmuebles</option>
+                  <option value="OTRO">Otro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="activo-serie">Número de serie (opcional)</label>
+                <input id="activo-serie" type="text" placeholder="SN123456">
+              </div>
+              <div class="form-group">
+                <label for="activo-proveedor">Proveedor / Comprado a</label>
+                <input id="activo-proveedor" type="text" placeholder="Nombre del vendedor">
+              </div>
+            </div>
+            <div class="form-section">
+              <h3 class="form-section-title">Compra</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="activo-costo">Costo de compra *</label>
+                  <input id="activo-costo" type="number" min="0.01" step="0.01" placeholder="0.00" required inputmode="decimal">
+                </div>
+                <div class="form-group">
+                  <label for="activo-precio-esperado">Precio venta esperado</label>
+                  <input id="activo-precio-esperado" type="number" min="0" step="0.01" placeholder="0.00" inputmode="decimal">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="activo-fecha-compra">Fecha de compra *</label>
+                <input id="activo-fecha-compra" type="date" required>
+              </div>
+              <div class="form-group">
+                <label for="activo-cantidad">Cantidad</label>
+                <input id="activo-cantidad" type="number" min="1" step="1" value="1" inputmode="numeric">
+              </div>
+            </div>
+            <div class="form-section">
+              <h3 class="form-section-title">Fotos del activo</h3>
+              <div id="upload-fotos-activo" class="upload-area">
+                <input id="upload-fotos-activo-input" type="file" accept="image/jpeg,image/png" multiple capture="environment">
+                <div id="preview-fotos-activo" class="photo-gallery"></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="activo-notas">Notas</label>
+              <textarea id="activo-notas" rows="2" placeholder="Estado, condición, observaciones..."></textarea>
+            </div>
+            <div id="activo-form-error" class="form-error hidden" role="alert"></div>
+            <div class="form-actions">
+              <button id="btn-cancel-activo" type="button" class="btn btn-secondary">Cancelar</button>
+              <button id="btn-submit-activo" type="submit" class="btn btn-primary">Guardar activo</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- COBRANZA                                                        -->
+        <!-- ============================================================== -->
+        <section id="view-cobranza" class="view hidden">
+          <div id="cobranza-hoy" class="section-block"></div>
+          <div id="cobranza-calendar" class="section-block"></div>
+          <div id="cobranza-alerts" class="section-block"></div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- REPORTES                                                        -->
+        <!-- ============================================================== -->
+        <section id="view-reportes" class="view hidden">
+          <div id="reportes-selector" class="section-block"></div>
+          <div id="reportes-viewer" class="section-block hidden"></div>
+          <div id="reportes-export" class="section-block hidden"></div>
+        </section>
+
+      </main>
+
+      <!-- ================================================================ -->
+      <!-- BOTTOM NAVIGATION                                                 -->
+      <!-- ================================================================ -->
+      <nav id="bottom-nav" class="bottom-nav" aria-label="Navegación principal">
+        <button id="nav-dashboard" class="nav-item" data-view="dashboard" type="button" aria-label="Dashboard">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          <span>Inicio</span>
+        </button>
+
+        <button id="nav-clientes" class="nav-item" data-view="clientes" type="button" aria-label="Clientes">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>Clientes</span>
+        </button>
+
+        <button id="nav-cobranza" class="nav-item nav-item-fab" data-view="cobranza" type="button" aria-label="Cobros de hoy">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <span>Cobros</span>
+        </button>
+
+        <button id="nav-activos" class="nav-item" data-view="activos" type="button" aria-label="Activos">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          <span>Activos</span>
+        </button>
+
+        <button id="nav-reportes" class="nav-item" data-view="reportes" type="button" aria-label="Reportes">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          <span>Reportes</span>
+        </button>
+      </nav>
+
+    </div><!-- /app-shell -->
+
+  </div><!-- /app-root -->
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

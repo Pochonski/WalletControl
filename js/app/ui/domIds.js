@@ -1,0 +1,153 @@
+/**
+ * DOM_IDS — IDs de todos los elementos HTML del index.html.
+ * Cero strings mágicos: siempre importar de aquí, nunca escribir el string directo.
+ */
+export const DOM_IDS = Object.freeze({
+  // ── Root / Overlays ──────────────────────────────────────────────────
+  APP_ROOT:              'app-root',
+  LOADING_OVERLAY:       'loading-overlay',
+  TOAST_CONTAINER:       'toast-container',
+
+  // ── Shells ───────────────────────────────────────────────────────────
+  APP_SHELL:             'app-shell',
+
+  // ── Header ───────────────────────────────────────────────────────────
+  APP_HEADER:            'app-header',
+  APP_TITLE:             'app-title',
+  BTN_BACK:              'btn-back',
+  BTN_LOGOUT:            'btn-logout',
+  SYNC_INDICATOR:        'sync-indicator',
+
+  // ── Navegación inferior ──────────────────────────────────────────────
+  BOTTOM_NAV:            'bottom-nav',
+  NAV_DASHBOARD:         'nav-dashboard',
+  NAV_CLIENTES:          'nav-clientes',
+  NAV_COBRANZA:          'nav-cobranza',
+  NAV_ACTIVOS:           'nav-activos',
+  NAV_REPORTES:          'nav-reportes',
+
+  // ── Vistas principales ───────────────────────────────────────────────
+  VIEW_LOGIN:            'view-login',
+  VIEW_DASHBOARD:        'view-dashboard',
+  VIEW_CLIENTES:         'view-clientes',
+  VIEW_CLIENTE_DETAIL:   'view-cliente-detail',
+  VIEW_CLIENTE_FORM:     'view-cliente-form',
+  VIEW_PRESTAMOS:        'view-prestamos',
+  VIEW_PRESTAMO_DETAIL:  'view-prestamo-detail',
+  VIEW_PRESTAMO_FORM:    'view-prestamo-form',
+  VIEW_PAGOS:            'view-pagos',
+  VIEW_PAGO_FORM:        'view-pago-form',
+  VIEW_ACTIVOS:          'view-activos',
+  VIEW_ACTIVO_DETAIL:    'view-activo-detail',
+  VIEW_ACTIVO_FORM:      'view-activo-form',
+  VIEW_COBRANZA:         'view-cobranza',
+  VIEW_REPORTES:         'view-reportes',
+
+  // ── Auth / Login ─────────────────────────────────────────────────────
+  LOGIN_FORM:            'login-form',
+  LOGIN_EMAIL:           'login-email',
+  LOGIN_PASSWORD:        'login-password',
+  LOGIN_NAME:            'login-name',
+  LOGIN_SUBMIT:          'login-submit',
+  LOGIN_ERROR:           'login-error',
+  REGISTER_TOGGLE:       'register-toggle',
+  REGISTER_NAME_GROUP:   'register-name-group',
+
+  // ── Dashboard ────────────────────────────────────────────────────────
+  DASHBOARD_METRICS:     'dashboard-metrics',
+  DASHBOARD_ALERTS:      'dashboard-alerts',
+  DASHBOARD_CHARTS:      'dashboard-charts',
+  DASHBOARD_QUICK_ACTIONS: 'dashboard-quick-actions',
+
+  // ── Clientes ─────────────────────────────────────────────────────────
+  CLIENTES_SEARCH:       'clientes-search',
+  CLIENTES_FILTER_BAR:   'clientes-filter-bar',
+  CLIENTES_LIST:         'clientes-list',
+  BTN_NUEVO_CLIENTE:     'btn-nuevo-cliente',
+  CLIENTE_FORM:          'cliente-form',
+  CLIENTE_NOMBRE:        'cliente-nombre',
+  CLIENTE_CEDULA:        'cliente-cedula',
+  CLIENTE_TELEFONO:      'cliente-telefono',
+  CLIENTE_EMAIL:         'cliente-email',
+  CLIENTE_DIRECCION:     'cliente-direccion',
+  CLIENTE_NACIMIENTO:    'cliente-nacimiento',
+  CLIENTE_RIESGO:        'cliente-riesgo',
+  CLIENTE_NOTAS:         'cliente-notas',
+  CLIENTE_CONTACTO_EMERGENCIA:  'cliente-contacto-emergencia',
+  CLIENTE_TELEFONO_EMERGENCIA:  'cliente-telefono-emergencia',
+  CLIENTE_FORM_ERROR:    'cliente-form-error',
+  BTN_SUBMIT_CLIENTE:    'btn-submit-cliente',
+  BTN_CANCEL_CLIENTE:    'btn-cancel-cliente',
+  UPLOAD_FOTO_ROSTRO:    'upload-foto-rostro',
+  UPLOAD_CEDULA_FRENTE:  'upload-cedula-frente',
+  UPLOAD_CEDULA_REVERSO: 'upload-cedula-reverso',
+  PREVIEW_FOTO_ROSTRO:   'preview-foto-rostro',
+  PREVIEW_CEDULA_FRENTE: 'preview-cedula-frente',
+  PREVIEW_CEDULA_REVERSO:'preview-cedula-reverso',
+
+  // ── Préstamos ────────────────────────────────────────────────────────
+  PRESTAMOS_SEARCH:      'prestamos-search',
+  PRESTAMOS_FILTER_BAR:  'prestamos-filter-bar',
+  PRESTAMOS_LIST:        'prestamos-list',
+  BTN_NUEVO_PRESTAMO:    'btn-nuevo-prestamo',
+  PRESTAMO_FORM:         'prestamo-form',
+  PRESTAMO_CLIENTE_ID:   'prestamo-cliente-id',
+  PRESTAMO_MONTO:        'prestamo-monto',
+  PRESTAMO_TASA:         'prestamo-tasa',
+  PRESTAMO_TIPO:         'prestamo-tipo',
+  PRESTAMO_FRECUENCIA:   'prestamo-frecuencia',
+  PRESTAMO_FECHA_INICIO: 'prestamo-fecha-inicio',
+  PRESTAMO_FECHA_FIN:    'prestamo-fecha-fin',
+  PRESTAMO_RESUMEN:      'prestamo-resumen',
+  PRESTAMO_FORM_ERROR:   'prestamo-form-error',
+  BTN_SUBMIT_PRESTAMO:   'btn-submit-prestamo',
+  BTN_CANCEL_PRESTAMO:   'btn-cancel-prestamo',
+
+  // ── Pagos ────────────────────────────────────────────────────────────
+  PAGOS_LIST:            'pagos-list',
+  BTN_NUEVO_PAGO:        'btn-nuevo-pago',
+  PAGO_FORM:             'pago-form',
+  PAGO_CUOTA_INFO:       'pago-cuota-info',
+  PAGO_MONTO:            'pago-monto',
+  PAGO_FECHA:            'pago-fecha',
+  PAGO_METODO:           'pago-metodo',
+  PAGO_REFERENCIA:       'pago-referencia',
+  PAGO_NOTAS:            'pago-notas',
+  PAGO_FORM_ERROR:       'pago-form-error',
+  BTN_SUBMIT_PAGO:       'btn-submit-pago',
+  BTN_CANCEL_PAGO:       'btn-cancel-pago',
+  UPLOAD_COMPROBANTE:    'upload-comprobante',
+  PREVIEW_COMPROBANTE:   'preview-comprobante',
+
+  // ── Activos ──────────────────────────────────────────────────────────
+  ACTIVOS_SEARCH:        'activos-search',
+  ACTIVOS_FILTER_BAR:    'activos-filter-bar',
+  ACTIVOS_LIST:          'activos-list',
+  ACTIVOS_METRICS:       'activos-metrics',
+  BTN_NUEVO_ACTIVO:      'btn-nuevo-activo',
+  ACTIVO_FORM:           'activo-form',
+  ACTIVO_NOMBRE:         'activo-nombre',
+  ACTIVO_CATEGORIA:      'activo-categoria',
+  ACTIVO_SERIE:          'activo-serie',
+  ACTIVO_PROVEEDOR:      'activo-proveedor',
+  ACTIVO_COSTO:          'activo-costo',
+  ACTIVO_PRECIO_ESPERADO:'activo-precio-esperado',
+  ACTIVO_FECHA_COMPRA:   'activo-fecha-compra',
+  ACTIVO_CANTIDAD:       'activo-cantidad',
+  ACTIVO_NOTAS:          'activo-notas',
+  ACTIVO_FORM_ERROR:     'activo-form-error',
+  BTN_SUBMIT_ACTIVO:     'btn-submit-activo',
+  BTN_CANCEL_ACTIVO:     'btn-cancel-activo',
+  UPLOAD_FOTOS_ACTIVO:   'upload-fotos-activo-input',
+  PREVIEW_FOTOS_ACTIVO:  'preview-fotos-activo',
+
+  // ── Cobranza ─────────────────────────────────────────────────────────
+  COBRANZA_HOY:          'cobranza-hoy',
+  COBRANZA_CALENDAR:     'cobranza-calendar',
+  COBRANZA_ALERTS:       'cobranza-alerts',
+
+  // ── Reportes ─────────────────────────────────────────────────────────
+  REPORTES_SELECTOR:     'reportes-selector',
+  REPORTES_VIEWER:       'reportes-viewer',
+  REPORTES_EXPORT:       'reportes-export',
+})
