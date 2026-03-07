@@ -6,6 +6,7 @@ export default defineConfig({
 
   // Servidor de desarrollo
   server: {
+    host: '0.0.0.0', // Permite acceso desde cualquier IP en la red
     port: 3000,
     open: true,
   },
