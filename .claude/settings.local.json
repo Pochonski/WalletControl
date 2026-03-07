@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/Salaz/Documents/GitHub/WalletControl/.md -type f -name \"*.md\" -exec basename {} ;)",
+      "Bash(grep -r \"MODULO\\\\|Feature\\\\|feature:\" /c/Users/Salaz/Documents/GitHub/WalletControl/.md/*.md)",
+      "Bash(git branch feature/dashboard dev)",
+      "Bash(git branch feature/clientes dev)",
+      "Bash(git branch feature/prestamos dev)",
+      "Bash(git branch feature/pagos dev)",
+      "Bash(git branch feature/activos dev)",
+      "Bash(git branch feature/cobranzas dev)",
+      "Bash(git branch feature/reportes dev)",
+      "Bash(git branch feature/auth-security dev)",
+      "Bash(git branch feature/storage dev)",
+      "Bash(git branch feature/offline-sync dev)",
+      "Bash(git push -u origin feature/dashboard feature/clientes feature/prestamos feature/pagos feature/activos feature/cobranzas feature/reportes feature/auth-security feature/storage feature/offline-sync)"
+    ]
+  }
+}
