@@ -397,11 +397,11 @@
               <h3 class="form-section-title">Información del activo</h3>
               <div class="form-group">
                 <label for="activo-nombre">Nombre / Descripción *</label>
-                <input id="activo-nombre" type="text" placeholder="Ej: iPhone 15 Pro Max" required>
+                <input id="activo-nombre" name="nombre" type="text" placeholder="Ej: iPhone 15 Pro Max" required>
               </div>
               <div class="form-group">
                 <label for="activo-categoria">Categoría *</label>
-                <select id="activo-categoria" required>
+                <select id="activo-categoria" name="categoria" required>
                   <option value="ELECTRONICA">Electrónica</option>
                   <option value="VEHICULOS">Vehículos</option>
                   <option value="JOYERIA">Joyería</option>
@@ -412,11 +412,11 @@
               </div>
               <div class="form-group">
                 <label for="activo-serie">Número de serie (opcional)</label>
-                <input id="activo-serie" type="text" placeholder="SN123456">
+                <input id="activo-serie" name="numero_serie" type="text" placeholder="SN123456">
               </div>
               <div class="form-group">
                 <label for="activo-proveedor">Proveedor / Comprado a</label>
-                <input id="activo-proveedor" type="text" placeholder="Nombre del vendedor">
+                <input id="activo-proveedor" name="proveedor" type="text" placeholder="Nombre del vendedor">
               </div>
             </div>
             <div class="form-section">
@@ -424,20 +424,20 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="activo-costo">Costo de compra *</label>
-                  <input id="activo-costo" type="number" min="0.01" step="0.01" placeholder="0.00" required inputmode="decimal">
+                  <input id="activo-costo" name="costo_compra" type="number" min="0.01" step="0.01" placeholder="0.00" required inputmode="decimal">
                 </div>
                 <div class="form-group">
                   <label for="activo-precio-esperado">Precio venta esperado</label>
-                  <input id="activo-precio-esperado" type="number" min="0" step="0.01" placeholder="0.00" inputmode="decimal">
+                  <input id="activo-precio-esperado" name="precio_venta_esperado" type="number" min="0" step="0.01" placeholder="0.00" inputmode="decimal">
                 </div>
               </div>
               <div class="form-group">
                 <label for="activo-fecha-compra">Fecha de compra *</label>
-                <input id="activo-fecha-compra" type="date" required>
+                <input id="activo-fecha-compra" name="fecha_compra" type="date" required>
               </div>
               <div class="form-group">
                 <label for="activo-cantidad">Cantidad</label>
-                <input id="activo-cantidad" type="number" min="1" step="1" value="1" inputmode="numeric">
+                <input id="activo-cantidad" name="cantidad" type="number" min="1" step="1" value="1" inputmode="numeric">
               </div>
             </div>
             <div class="form-section">
@@ -449,7 +449,7 @@
             </div>
             <div class="form-group">
               <label for="activo-notas">Notas</label>
-              <textarea id="activo-notas" rows="2" placeholder="Estado, condición, observaciones..."></textarea>
+              <textarea id="activo-notas" name="notas" rows="2" placeholder="Estado, condición, observaciones..."></textarea>
             </div>
             <div id="activo-form-error" class="form-error hidden" role="alert"></div>
             <div class="form-actions">

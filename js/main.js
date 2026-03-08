@@ -13,6 +13,10 @@
 import { store } from './app/state/store.js'
 import { initAppController } from './app/controllers/appController.js'
 import { initLoginController } from './auth/ui/loginController.js'
+import { initActivosFormController } from './activos/ui/activosFormController.js'
+import { initActivosTableController } from './activos/ui/activosTableController.js'
+import { initActivosDetailController } from './activos/ui/activosDetailController.js'
+import { initActivosSearchAndMetricsController } from './activos/ui/activosSearchMetricsController.js'
 import { initClientesController } from './clientes/ui/clientesController.js'
 import { initCobranzasListController } from './cobranzas/ui/cobranzasListController.js'
 import { initCobranzaDetailController } from './cobranzas/ui/cobranzaDetailController.js'
@@ -22,6 +26,12 @@ import { getEl } from './app/ui/domAdapter.js'
 // Inicializar orquestadores principales
 const appCtrl = initAppController(store)
 initLoginController(store)
+
+// Inicializar Activos
+initActivosFormController(store)
+initActivosTableController(store)
+initActivosDetailController(store)
+initActivosSearchAndMetricsController(store)
 
 // Construir objeto DOM para inyectar dependencias UI
 const domContext = {
