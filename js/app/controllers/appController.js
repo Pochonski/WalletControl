@@ -121,12 +121,18 @@ export function showView(viewName, store) {
   // Ocultar todas las vistas
   Object.values(VIEW_ID_MAP).forEach(id => {
     const el = document.getElementById(id)
-    if (el) el.classList.remove(CSS_CLASSES.ACTIVE)
+    if (el) {
+      el.classList.remove(CSS_CLASSES.ACTIVE)
+      el.classList.add(CSS_CLASSES.HIDDEN)
+    }
   })
 
   // Mostrar la vista solicitada
   const targetEl = document.getElementById(targetId)
-  if (targetEl) targetEl.classList.add(CSS_CLASSES.ACTIVE)
+  if (targetEl) {
+    targetEl.classList.add(CSS_CLASSES.ACTIVE)
+    targetEl.classList.remove(CSS_CLASSES.HIDDEN)
+  }
 
   // Actualizar nav activo
   _updateNavActive(viewName)

@@ -1,6 +1,6 @@
 import { DOM_IDS } from '../../app/ui/domIds.js'
 import { ACTION_TYPES } from '../../app/state/actions.js'
-import { getEl, showError, showSuccess } from '../../app/ui/domAdapter.js'
+import { getEl } from '../../app/ui/domAdapter.js'
 import { bindEventEl } from '../../app/ui/domEvents.js'
 import { showView } from '../../app/controllers/appController.js'
 import { supabaseClient } from '../../adapters/supabaseClient.js'
@@ -22,7 +22,10 @@ export const initActivosDetailController = (store) => {
     const activo = state.activos.list.find(a => a.id === id)
     
     if (!activo) {
-      showError(null, 'Activo no encontrado')
+      store.dispatch({
+        type: ACTION_TYPES.SHOW_TOAST,
+        payload: { message: 'Activo no encontrado', type: 'error' }
+      })
       return
     }
 

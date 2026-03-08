@@ -3,13 +3,13 @@ import { ACTION_TYPES } from '../../app/state/actions.js'
 import { activosDataAdapter } from '../../adapters/dataAdapters/activosDataAdapter.js'
 import { assetPhotosAdapter } from '../../adapters/fileAdapters/assetPhotosAdapter.js'
 import { validateActivo } from '../../domain/activos/validate.js'
-import { getEl, showError, showSuccess, hideError } from '../../app/ui/domAdapter.js'
+import { getEl, showError, clearError } from '../../app/ui/domAdapter.js'
 import { bindEventEl } from '../../app/ui/domEvents.js'
 import { showView } from '../../app/controllers/appController.js'
 
 export const initActivosFormController = (store) => {
   const formEl = getEl(DOM_IDS.ACTIVO_FORM)
-  const errorEl = getEl(DOM_IDS.ACTIVO_FORM_ERROR)
+  // errorEl no se necesita cargar como objeto si usamos los metodos de error por ID
   const btnCancel = getEl(DOM_IDS.BTN_CANCEL_ACTIVO)
   const btnNuevo = getEl(DOM_IDS.BTN_NUEVO_ACTIVO)
 
@@ -46,7 +46,7 @@ export const initActivosFormController = (store) => {
     bindEventEl(btnNuevo, 'click', () => {
       formEl.reset()
       if (photoPreview) photoPreview.innerHTML = ''
-      hideError(errorEl)
+      clearError(DOM_IDS.ACTIVO_FORM_ERROR)
       showView('activo-form', store)
     })
   }
@@ -56,7 +56,7 @@ export const initActivosFormController = (store) => {
     bindEventEl(btnCancel, 'click', () => {
       formEl.reset()
       if (photoPreview) photoPreview.innerHTML = ''
-      hideError(errorEl)
+      clearError(DOM_IDS.ACTIVO_FORM_ERROR)
       showView('activos', store)
     })
   }
@@ -80,12 +80,12 @@ export const initActivosFormController = (store) => {
     // Validar en el dominio
     const { valid, errors } = validateActivo(data)
     if (!valid) {
-      showError(errorEl, errors.join('<br>'))
+      showError(DOM_IDS.ACTIVO_FORM_ERROR, errors.join('<br>'))
       return
     }
 
     // Ocultar errores previos
-    hideError(errorEl)
+    clearError(DOM_IDS.ACTIVO_FORM_ERROR)
     store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
 
     try {
