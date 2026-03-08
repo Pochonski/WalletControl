@@ -13,9 +13,15 @@
 import { store } from './app/state/store.js'
 import { initAppController } from './app/controllers/appController.js'
 import { initLoginController } from './auth/ui/loginController.js'
+import { initActivosFormController } from './activos/ui/activosFormController.js'
+import { initActivosTableController } from './activos/ui/activosTableController.js'
+import { initActivosDetailController } from './activos/ui/activosDetailController.js'
+import { initActivosSearchAndMetricsController } from './activos/ui/activosSearchMetricsController.js'
 import { initClientesController } from './clientes/ui/clientesController.js'
 import { initPrestamosController } from './prestamos/ui/prestamosController.js'
 import { initDashboardController } from './app/controllers/dashboardController.js'
+import { initCobranzasListController } from './cobranzas/ui/cobranzasListController.js'
+import { initCobranzaDetailController } from './cobranzas/ui/cobranzaDetailController.js'
 import { DOM_IDS } from './app/ui/domIds.js'
 import { getEl } from './app/ui/domAdapter.js'
 
@@ -24,6 +30,12 @@ const appCtrl = initAppController(store)
 
 // Inicializar vista de login
 initLoginController(store, appCtrl)
+
+// Inicializar Activos
+initActivosFormController(store)
+initActivosTableController(store)
+initActivosDetailController(store)
+initActivosSearchAndMetricsController(store)
 
 // Recopilar elementos DOM para inicializar controladores de dominio
 const domContext = {
@@ -40,6 +52,18 @@ const domContext = {
     tabla: getEl(DOM_IDS.PRESTAMOS_LIST),
     selectCliente: getEl(DOM_IDS.PRESTAMO_CLIENTE_ID),
     btnNuevo: getEl(DOM_IDS.BTN_NUEVO_PRESTAMO)
+  },
+  cobranzas: {
+    lista: getEl(DOM_IDS.COBRANZAS_LIST),
+    filtros: getEl(DOM_IDS.COBRANZAS_FILTER_BAR),
+    btnRefresh: getEl(DOM_IDS.COBRANZAS_BTN_REFRESH),
+    searchInput: getEl(DOM_IDS.COBRANZAS_SEARCH)
+  },
+  'cobranza-detail': {
+    info: getEl(DOM_IDS.COBRANZA_DETAIL_INFO),
+    actions: getEl(DOM_IDS.COBRANZA_DETAIL_ACTIONS),
+    actionsList: getEl(DOM_IDS.COBRANZA_ACTIONS_LIST),
+    actionForm: getEl(DOM_IDS.COBRANZA_ACTION_FORM)
   }
 }
 
@@ -47,3 +71,5 @@ const domContext = {
 initClientesController(domContext, store, appCtrl)
 initPrestamosController(domContext, store, appCtrl)
 initDashboardController(store, appCtrl)
+initCobranzasListController(domContext, store, appCtrl)
+initCobranzaDetailController(domContext, store, appCtrl)

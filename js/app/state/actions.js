@@ -42,6 +42,14 @@ export const ACTION_TYPES = Object.freeze({
   UPDATE_ACTIVO:        'ACTIVOS/UPDATE',
   ARCHIVE_ACTIVO:       'ACTIVOS/ARCHIVE',
 
+  // ── Cobranzas ────────────────────────────────────────────────────────────
+  LOAD_COBRANZAS:       'COBRANZAS/LOAD',
+  LOAD_COBRANZA_DETAIL: 'COBRANZAS/LOAD_DETAIL',
+  UPDATE_COBRANZA_DETAIL: 'COBRANZAS/UPDATE_DETAIL',
+  UPDATE_COBRANZA_ACTIONS: 'COBRANZAS/UPDATE_ACTIONS',
+  SET_SELECTED_COBRANZA: 'COBRANZAS/SET_SELECTED',
+  UPDATE_COBRANZA_STATUS: 'COBRANZAS/UPDATE_STATUS',
+
   // ── Sync offline-first ───────────────────────────────────────────────────
   MARK_PENDING_SYNC:    'SYNC/MARK_PENDING',
   SYNC_SUCCESS:         'SYNC/SUCCESS',

@@ -42,6 +42,14 @@ export const initialState = Object.freeze({
     loaded: false,
   },
 
+  cobranzas: {
+    list: [],             // [COBRANZA]
+    selectedId: null,     // ID de cobranza seleccionada
+    detail: null,         // Detalle de cobranza actual
+    actions: [],          // Acciones de cobranza
+    loaded: false,
+  },
+
   pendingSync: [],        // [{ id, entityType, entityId, action, payload, timestamp }]
 })
 
@@ -257,7 +265,81 @@ export function reducer(state = initialState, action) {
         },
       }
 
+    // ── Cobranzas ───────────────────────────────────────────────────────────
+    case ACTION_TYPES.LOAD_COBRANZAS:
+      return {
+        ...state,
+        cobranzas: {
+          ...state.cobranzas,
+          list: action.payload,
+          loaded: true,
+        },
+      }
+
+    case ACTION_TYPES.LOAD_COBRANZA_DETAIL:
+      return {
+        ...state,
+        cobranzas: {
+          ...state.cobranzas,
+          detail: action.payload.collection,
+          actions: action.payload.actions,
+        },
+      }
+
+    case ACTION_TYPES.UPDATE_COBRANZA_DETAIL:
+      return {
+        ...state,
+        cobranzas: {
+          ...state.cobranzas,
+          detail: action.payload,
+          // Actualizar también en la lista si existe
+          list: state.cobranzas.list.map(c =>
+            c.id === action.payload.id || c.payment_id === action.payload.payment_id
+              ? { ...c, ...action.payload }
+              : c
+          ),
+        },
+      }
+
+    case ACTION_TYPES.UPDATE_COBRANZA_ACTIONS:
+      return {
+        ...state,
+        cobranzas: {
+          ...state.cobranzas,
+          actions: action.payload,
+        },
+      }
+
+    case ACTION_TYPES.SET_SELECTED_COBRANZA:
+      return {
+        ...state,
+        cobranzas: {
+          ...state.cobranzas,
+          selectedId: action.payload,
+        },
+      }
+
+    case ACTION_TYPES.UPDATE_COBRANZA_STATUS:
+      return {
+        ...state,
+        cobranzas: {
+          ...state.cobranzas,
+          // Actualizar en la lista si existe
+          list: state.cobranzas.list.map(c =>
+            c.id === action.payload.id || c.payment_id === action.payload.payment_id
+              ? { ...c, ...action.payload }
+              : c
+          ),
+          // Actualizar detail si es la misma cobranza
+          detail: state.cobranzas.detail?.id === action.payload.id ||
+                  state.cobranzas.detail?.payment_id === action.payload.payment_id
+            ? { ...state.cobranzas.detail, ...action.payload }
+            : state.cobranzas.detail,
+        },
+      }
+
     // ── Sync ─────────────────────────────────────────────────────────────
+    case ACTION_TYPES.MARK_PENDING_SYNC:
     case ACTION_TYPES.MARK_PENDING_SYNC:
       return {
         ...state,
