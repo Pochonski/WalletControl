@@ -476,25 +476,29 @@
               </svg>
             </button>
           </div>
+          <div id="cobranzas-metrics" class="metrics-grid"></div>
 
           <div id="cobranzas-filter-bar" class="filter-bar">
-            <select id="filtro-estado">
-              <option value="">Todos los estados</option>
-              <option value="pending">Pendientes</option>
-              <option value="in_progress">En proceso</option>
-              <option value="contacted">Contactados</option>
-              <option value="negotiated">Negociados</option>
-              <option value="resolved">Resueltos</option>
-              <option value="cancelled">Cancelados</option>
-              <option value="legal">Legal</option>
-            </select>
-            <select id="filtro-escala">
-              <option value="">Todas las escalas</option>
-              <option value="low">Baja</option>
-              <option value="medium">Media</option>
-              <option value="high">Alta</option>
-              <option value="critical">Crítica</option>
-            </select>
+            <div class="filter-group">
+              <label for="filtro-estado">Estado</label>
+              <select id="filtro-estado">
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendientes</option>
+                <option value="vencida">Vencidas</option>
+                <option value="parcialmente_pagada">Pago parcial</option>
+                <option value="pagada">Pagadas</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filtro-escala">Prioridad</label>
+              <select id="filtro-escala">
+                <option value="">Todas las escalas</option>
+                <option value="low">Baja (Sin atraso)</option>
+                <option value="medium">Media (1-30 días)</option>
+                <option value="high">Alta (31-60 días)</option>
+                <option value="critical">Crítica (+60 días)</option>
+              </select>
+            </div>
           </div>
 
           <div id="cobranzas-list" class="card-list"></div>
