@@ -119,7 +119,7 @@
         <!-- ============================================================== -->
         <!-- DASHBOARD                                                       -->
         <!-- ============================================================== -->
-        <section id="view-dashboard" class="view hidden">
+        <section id="view-dashboard" class="view">
           <div id="dashboard-metrics" class="metrics-grid"></div>
           <div id="dashboard-alerts" class="section-block"></div>
           <div id="dashboard-charts" class="section-block"></div>
@@ -129,7 +129,7 @@
         <!-- ============================================================== -->
         <!-- CLIENTES                                                        -->
         <!-- ============================================================== -->
-        <section id="view-clientes" class="view hidden">
+        <section id="view-clientes" class="view">
           <div class="view-toolbar">
             <div class="search-wrapper">
               <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -144,36 +144,36 @@
         </section>
 
         <!-- Detalle cliente (panel completo, se muestra sobre la lista) -->
-        <section id="view-cliente-detail" class="view hidden"></section>
+        <section id="view-cliente-detail" class="view"></section>
 
         <!-- Formulario nuevo/editar cliente -->
-        <section id="view-cliente-form" class="view hidden">
+        <section id="view-cliente-form" class="view">
           <form id="cliente-form" novalidate>
             <div class="form-section">
               <h3 class="form-section-title">Datos personales</h3>
               <div class="form-group">
                 <label for="cliente-nombre">Nombre completo *</label>
-                <input id="cliente-nombre" type="text" placeholder="Juan Pérez" required>
+                <input id="cliente-nombre" name="nombre" type="text" placeholder="Juan Pérez" required>
               </div>
               <div class="form-group">
                 <label for="cliente-cedula">Cédula / Documento *</label>
-                <input id="cliente-cedula" type="text" placeholder="000-0000000-0" required inputmode="numeric">
+                <input id="cliente-cedula" name="cedula" type="text" placeholder="000-0000000-0" required inputmode="numeric">
               </div>
               <div class="form-group">
                 <label for="cliente-telefono">Teléfono</label>
-                <input id="cliente-telefono" type="tel" placeholder="809-555-0000" inputmode="tel">
+                <input id="cliente-telefono" name="telefono" type="tel" placeholder="809-555-0000" inputmode="tel">
               </div>
               <div class="form-group">
                 <label for="cliente-email">Correo electrónico</label>
-                <input id="cliente-email" type="email" placeholder="cliente@ejemplo.com" inputmode="email">
+                <input id="cliente-email" name="email" type="email" placeholder="cliente@ejemplo.com" inputmode="email">
               </div>
               <div class="form-group">
                 <label for="cliente-direccion">Dirección</label>
-                <textarea id="cliente-direccion" rows="2" placeholder="Calle, número, ciudad..."></textarea>
+                <textarea id="cliente-direccion" name="direccion" rows="2" placeholder="Calle, número, ciudad..."></textarea>
               </div>
               <div class="form-group">
                 <label for="cliente-nacimiento">Fecha de nacimiento</label>
-                <input id="cliente-nacimiento" type="date">
+                <input id="cliente-nacimiento" name="fecha_nacimiento" type="date">
               </div>
             </div>
 
@@ -181,11 +181,11 @@
               <h3 class="form-section-title">Contacto alternativo</h3>
               <div class="form-group">
                 <label for="cliente-contacto-emergencia">Contacto de emergencia</label>
-                <input id="cliente-contacto-emergencia" type="text" placeholder="Nombre del contacto">
+                <input id="cliente-contacto-emergencia" name="contacto_emergencia" type="text" placeholder="Nombre del contacto">
               </div>
               <div class="form-group">
                 <label for="cliente-telefono-emergencia">Teléfono de emergencia</label>
-                <input id="cliente-telefono-emergencia" type="tel" inputmode="tel">
+                <input id="cliente-telefono-emergencia" name="telefono_emergencia" type="tel" inputmode="tel">
               </div>
             </div>
 
@@ -193,7 +193,7 @@
               <h3 class="form-section-title">Clasificación</h3>
               <div class="form-group">
                 <label for="cliente-riesgo">Nivel de riesgo</label>
-                <select id="cliente-riesgo">
+                <select id="cliente-riesgo" name="nivel_riesgo">
                   <option value="BAJO">Bajo</option>
                   <option value="MEDIO">Medio</option>
                   <option value="ALTO">Alto</option>
@@ -201,7 +201,7 @@
               </div>
               <div class="form-group">
                 <label for="cliente-notas">Notas internas</label>
-                <textarea id="cliente-notas" rows="3" placeholder="Observaciones sobre el cliente..."></textarea>
+                <textarea id="cliente-notas" name="notas" rows="3" placeholder="Observaciones sobre el cliente..."></textarea>
               </div>
             </div>
 
@@ -237,7 +237,7 @@
         <!-- ============================================================== -->
         <!-- PRESTAMOS                                                       -->
         <!-- ============================================================== -->
-        <section id="view-prestamos" class="view hidden">
+        <section id="view-prestamos" class="view">
           <div class="view-toolbar">
             <div class="search-wrapper">
               <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -251,9 +251,9 @@
           <div id="prestamos-list" class="card-list"></div>
         </section>
 
-        <section id="view-prestamo-detail" class="view hidden"></section>
+        <section id="view-prestamo-detail" class="view"></section>
 
-        <section id="view-prestamo-form" class="view hidden">
+        <section id="view-prestamo-form" class="view">
           <form id="prestamo-form" novalidate>
             <div class="form-section">
               <h3 class="form-section-title">Cliente</h3>
@@ -314,7 +314,7 @@
         <!-- ============================================================== -->
         <!-- PAGOS                                                           -->
         <!-- ============================================================== -->
-        <section id="view-pagos" class="view hidden">
+        <section id="view-pagos" class="view">
           <div class="view-toolbar">
             <span class="toolbar-title">Historial de pagos</span>
             <button id="btn-nuevo-pago" class="btn btn-primary btn-sm" type="button">+ Registrar</button>
@@ -322,7 +322,7 @@
           <div id="pagos-list" class="card-list"></div>
         </section>
 
-        <section id="view-pago-form" class="view hidden">
+        <section id="view-pago-form" class="view">
           <form id="pago-form" novalidate>
             <div class="form-section">
               <h3 class="form-section-title">Cuota a pagar</h3>
@@ -374,7 +374,7 @@
         <!-- ============================================================== -->
         <!-- ACTIVOS                                                         -->
         <!-- ============================================================== -->
-        <section id="view-activos" class="view hidden">
+        <section id="view-activos" class="view">
           <div class="view-toolbar">
             <div class="search-wrapper">
               <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -389,9 +389,9 @@
           <div id="activos-list" class="card-list"></div>
         </section>
 
-        <section id="view-activo-detail" class="view hidden"></section>
+        <section id="view-activo-detail" class="view"></section>
 
-        <section id="view-activo-form" class="view hidden">
+        <section id="view-activo-form" class="view">
           <form id="activo-form" novalidate>
             <div class="form-section">
               <h3 class="form-section-title">Información del activo</h3>
@@ -462,7 +462,7 @@
         <!-- ============================================================== -->
         <!-- COBRANZA                                                        -->
         <!-- ============================================================== -->
-        <section id="view-cobranza" class="view hidden">
+        <section id="view-cobranza" class="view">
           <div id="cobranza-hoy" class="section-block"></div>
           <div id="cobranza-calendar" class="section-block"></div>
           <div id="cobranza-alerts" class="section-block"></div>
@@ -471,7 +471,7 @@
         <!-- ============================================================== -->
         <!-- REPORTES                                                        -->
         <!-- ============================================================== -->
-        <section id="view-reportes" class="view hidden">
+        <section id="view-reportes" class="view">
           <div id="reportes-selector" class="section-block"></div>
           <div id="reportes-viewer" class="section-block hidden"></div>
           <div id="reportes-export" class="section-block hidden"></div>

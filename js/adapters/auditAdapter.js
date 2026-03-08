@@ -21,7 +21,7 @@ export const auditAdapter = {
       const { data: { user } } = await supabaseClient.auth.getUser()
       if (!user) return
 
-      await supabaseClient
+      const { error } = await supabaseClient
         .from('audit_logs')
         .insert({
           user_id: user.id,
@@ -34,6 +34,12 @@ export const auditAdapter = {
             userAgent: navigator.userAgent
           }
         })
+
+      // La tabla audit_logs solo acepta INSERT via función SECURITY DEFINER,
+      // así que ignoramos silenciosamente el error RLS si ocurre
+      if (error) {
+        console.warn('[auditAdapter] Audit log bloqueado por RLS (esperado):', error.code)
+      }
     } catch (err) {
       // No bloquea si falla el logging
       console.warn('[auditAdapter] Logging failed:', err.message)

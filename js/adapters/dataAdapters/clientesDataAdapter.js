@@ -27,7 +27,7 @@ export const clientesDataAdapter = {
         .from('clientes')
         .select('*')
         .eq('user_id', user.id)
-        .order('fecha_creado', { ascending: false })
+        .order('fecha_registro', { ascending: false })
 
       if (error) throw error
 
@@ -68,7 +68,7 @@ export const clientesDataAdapter = {
         cedula: encryptionAdapter.encryptField(cliente.cedula),
         user_id: user.id,
         estado: 'ACTIVO',
-        fecha_creado: new Date().toISOString()
+        fecha_registro: new Date().toISOString()
       }
 
       const { data, error } = await supabaseClient
@@ -105,7 +105,7 @@ export const clientesDataAdapter = {
         id: `temp-${Date.now()}`,
         user_id: null,
         estado: 'ACTIVO',
-        fecha_creado: new Date().toISOString(),
+        fecha_registro: new Date().toISOString(),
         _pendingSync: true
       }
 
