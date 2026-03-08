@@ -25,6 +25,7 @@ export const initPrestamosController = (dom, store, appCtrl) => {
   const tabla = prestamosSection.tabla
   const selectCliente = prestamosSection.selectCliente
   const btnNuevo = prestamosSection.btnNuevo
+  const inputBuscar = document.getElementById('prestamos-search')
 
   // ────────────────────────────────────────────────────────────────
   // 1. CARGA INICIAL (Préstamos y Clientes para el <select>)
@@ -80,55 +81,38 @@ export const initPrestamosController = (dom, store, appCtrl) => {
   // ────────────────────────────────────────────────────────────────
 
   if (formulario) {
-    // Podríamos recalcular cuotas estimadas aquí al cambiar inputs
-    // (Omitido por brevedad en MVP, pero sería un `input` event listener o similar)
-
     formulario.addEventListener('submit', async (e) => {
       e.preventDefault()
 
-      // Usamos el ID del DOM para estar seguros o name si existiera. 
-      // Como no hay names en el HTML, extraemos manualmente los values.
-      const getVal = (id) => document.getElementById(id)?.value
+      const formData = new FormData(formulario)
+      const data = Object.fromEntries(formData)
 
       const nuevoPrestamo = {
-        cliente_id: getVal('prestamo-cliente-id'),
-        monto_original: parseFloat(getVal('prestamo-monto')),
-        tasa_interes: parseFloat(getVal('prestamo-tasa')),
-        tipo_interes: getVal('prestamo-tipo'),
-        frecuencia_pago: getVal('prestamo-frecuencia'),
-        fecha_inicio: getVal('prestamo-fecha-inicio'),
-        fecha_fin: getVal('prestamo-fecha-fin')
+        cliente_id: data['cliente_id'] || document.getElementById('prestamo-cliente-id')?.value,
+        monto_original: parseFloat(data['monto'] || document.getElementById('prestamo-monto')?.value),
+        tasa_interes: parseFloat(data['tasa'] || document.getElementById('prestamo-tasa')?.value),
+        tipo_interes: data['tipo'] || document.getElementById('prestamo-tipo')?.value,
+        frecuencia_pago: data['frecuencia'] || document.getElementById('prestamo-frecuencia')?.value,
+        fecha_inicio: data['fecha_inicio'] || document.getElementById('prestamo-fecha-inicio')?.value,
+        fecha_fin: data['fecha_fin'] || document.getElementById('prestamo-fecha-fin')?.value
       }
 
-      // Dispatch local inmediato
-      store.dispatch({
-        type: ACTION_TYPES.ADD_PRESTAMO,
-        payload: nuevoPrestamo
-      })
+      // Validar básicos
+      if (!nuevoPrestamo.cliente_id || isNaN(nuevoPrestamo.monto_original)) {
+        showError('Por favor complete los campos obligatorios.')
+        return
+      }
 
       try {
         store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
 
         const guardado = await prestamosDataAdapter.save(nuevoPrestamo)
-
-        // Sync ID temporal si aplica
-        if (nuevoPrestamo.id && nuevoPrestamo.id.startsWith('temp-')) {
-          store.dispatch({
-            type: ACTION_TYPES.SYNC_REMOTE_ID,
-            payload: {
-              localId: nuevoPrestamo.id,
-              remoteId: guardado.id,
-              entityType: 'prestamo'
-            }
-          })
-        }
+        store.dispatch({ type: ACTION_TYPES.ADD_PRESTAMO, payload: guardado })
 
         showSuccess('Préstamo creado exitosamente')
         formulario.reset()
+        appCtrl.showView('prestamos')
         
-        // Refrescar para tener el objeto completo con `clientes.nombre` que retorna Supabase
-        await cargarDatos() 
-
       } catch (err) {
         console.error('[prestamosController] Save error:', err)
         showError('Error: ' + err.message)
@@ -144,103 +128,145 @@ export const initPrestamosController = (dom, store, appCtrl) => {
 
   if (btnNuevo) {
     btnNuevo.addEventListener('click', () => {
+      appCtrl.showView('prestamo-form')
       if (formulario) {
         formulario.reset()
-        formulario.scrollIntoView({ behavior: 'smooth' })
       }
     })
   }
 
   // ────────────────────────────────────────────────────────────────
-  // 4. RENDER de tabla
+  // 3.5 BÚSQUEDA REACTIVA
+  // ────────────────────────────────────────────────────────────────
+
+  if (inputBuscar) {
+    inputBuscar.addEventListener('input', () => {
+      render()
+    })
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // 4. RENDER de tarjetas (Cards)
   // ────────────────────────────────────────────────────────────────
 
   const render = () => {
-    const { prestamos } = store.getState()
+    const { prestamos, clientes } = store.getState()
     const { list } = prestamos
 
     if (!tabla) return
 
     tabla.innerHTML = ''
 
-    if (list.length === 0) {
+    const termino = inputBuscar ? inputBuscar.value.toLowerCase().trim() : ''
+    
+    // Filtrar por término de búsqueda (nombre del cliente)
+    const filteredList = list.filter(p => {
+      if (!termino) return true
+      let nombre = ''
+      if (p.clientes && p.clientes.nombre) {
+        nombre = p.clientes.nombre.toLowerCase()
+      } else {
+        const c = clientes.list.find(c => c.id === p.cliente_id)
+        if (c) nombre = c.nombre.toLowerCase()
+      }
+      return nombre.includes(termino)
+    })
+
+    if (filteredList.length === 0) {
       tabla.innerHTML = `
-        <tr>
-          <td colspan="7" style="text-align: center; padding: 20px; color: #999;">
-            No hay préstamos registrados
-          </td>
-        </tr>
+        <div style="text-align: center; padding: 40px 20px; color: var(--color-text-light);">
+          <div style="font-size: 3rem; margin-bottom: 10px; opacity: 0.3;">📄</div>
+          <p>${termino ? 'No se encontraron préstamos para esa búsqueda' : 'No hay préstamos registrados'}</p>
+        </div>
       `
       return
     }
 
     const fragment = document.createDocumentFragment()
 
-    list.forEach(prestamo => {
-      const row = document.createElement('tr')
-      const estadoClass = prestamo.estado === 'MORA' ? 'riesgo-high'
-        : prestamo.estado === 'PAGADO' ? 'estado-pagado' 
-        : prestamo.estado === 'ARCHIVADO' ? 'estado-archivado' 
-        : 'estado-activo'
+    filteredList.forEach(prestamo => {
+      const card = document.createElement('div')
+      card.className = 'card'
+      card.dataset.id = prestamo.id
+
+      const estadoClass = prestamo.estado === 'MORA' ? 'badge--danger'
+        : prestamo.estado === 'PAGADO' ? 'badge--success' 
+        : prestamo.estado === 'ARCHIVADO' ? 'badge--secondary' 
+        : 'badge--primary'
         
-      // Intentar sacar el nombre del cliente de la relación join, o del estado local si es reciente
+      // Obtener nombre del cliente
       let nombreCliente = 'Cargando...'
       if (prestamo.clientes && prestamo.clientes.nombre) {
           nombreCliente = prestamo.clientes.nombre
       } else {
-          const { clientes } = store.getState()
           const c = clientes.list.find(c => c.id === prestamo.cliente_id)
           if (c) nombreCliente = c.nombre
       }
 
+      // Iniciales para el avatar del préstamo (del cliente)
+      const iniciales = (nombreCliente || '??')
+        .split(' ')
+        .filter(n => n)
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2)
+
       // Formatear moneda
       const montoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(prestamo.monto_original)
+      const frecuenciaFmt = prestamo.frecuencia_pago ? prestamo.frecuencia_pago.toLowerCase() : ''
 
-      row.innerHTML = `
-        <td>${nombreCliente}</td>
-        <td>${montoFmt}</td>
-        <td>${prestamo.tasa_interes}%</td>
-        <td>${prestamo.tipo_interes}</td>
-        <td>${prestamo.frecuencia_pago}</td>
-        <td><span class="badge ${estadoClass}">${prestamo.estado || 'ACTIVO'}</span></td>
-        <td>
-          <button class="btn-ver-cuotas" data-id="${prestamo.id}">Ver Cuotas</button>
-          <button class="btn-archivar" data-id="${prestamo.id}">Archivar</button>
-        </td>
+      card.innerHTML = `
+        <div class="card-avatar">${iniciales}</div>
+        <div class="card-body">
+          <div class="card-title">${nombreCliente}</div>
+          <div class="card-subtitle">${montoFmt}</div>
+          <div class="card-meta">
+             <span class="card-subtitle" style="font-size: 0.75rem;">
+               Tasa: ${prestamo.tasa_interes}% (${prestamo.tipo_interes})
+             </span>
+          </div>
+        </div>
+        <div class="card-right">
+          <span class="badge ${estadoClass}">${prestamo.estado || 'ACTIVO'}</span>
+          <div style="display: flex; gap: 8px; margin-top: auto;">
+             <button class="btn-icon btn-eliminar" title="Eliminar" style="color: var(--color-danger);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+             </button>
+             <span class="card-subtitle" style="font-size: 0.70rem; align-self: flex-end;">
+               ${frecuenciaFmt}
+             </span>
+          </div>
+        </div>
       `
 
-      // Eventos
-      const btnCuotas = row.querySelector('.btn-ver-cuotas')
-      const btnArchivar = row.querySelector('.btn-archivar')
+      // Click en la tarjeta muestra detalle
+      card.addEventListener('click', async () => {
+        try {
+          store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
+          const cuotas = await cuotasDataAdapter.getByPrestamo(prestamo.id)
+          renderPrestamoDetail(prestamo, cuotas, nombreCliente)
+        } catch (err) {
+          showError('Error al cargar cuotas: ' + err.message)
+        } finally {
+          store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
+        }
+      })
 
-      if (btnCuotas) {
-        btnCuotas.addEventListener('click', async () => {
-          try {
-            store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
-            const cuotas = await cuotasDataAdapter.getByPrestamo(prestamo.id)
-            renderPrestamoDetail(prestamo, cuotas, nombreCliente)
-            appCtrl.showView('prestamo-detail')
-          } catch (err) {
-            showError('Error al cargar cuotas: ' + err.message)
-          } finally {
-            store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
-          }
-        })
-      }
-
-      if (btnArchivar) {
-        btnArchivar.addEventListener('click', async () => {
-          if (confirm(`¿Archivar préstamo de ${nombreCliente}?`)) {
+      // Botón Eliminar
+      const btnEliminar = card.querySelector('.btn-eliminar')
+      if (btnEliminar) {
+        btnEliminar.addEventListener('click', async (e) => {
+          e.stopPropagation()
+          if (confirm('¿Estás seguro de que deseas eliminar este préstamo y todas sus cuotas?')) {
             try {
               store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
-              await prestamosDataAdapter.archive(prestamo.id)
-              store.dispatch({
-                type: ACTION_TYPES.ARCHIVE_PRESTAMO,
-                payload: prestamo.id
-              })
-              showSuccess('Préstamo archivado')
+              // Usaremos el adapter para eliminar/archivar (asumimos que delete ya está o lo implementaremos)
+              await prestamosDataAdapter.update(prestamo.id, { estado: 'ARCHIVADO' })
+              store.dispatch({ type: ACTION_TYPES.UPDATE_PRESTAMO, payload: { ...prestamo, estado: 'ARCHIVADO' } })
+              showSuccess('Préstamo enviado a archivo')
             } catch (err) {
-              showError('Error: ' + err.message)
+              showError('Error al archivar préstamo: ' + err.message)
             } finally {
               store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
             }
@@ -248,14 +274,14 @@ export const initPrestamosController = (dom, store, appCtrl) => {
         })
       }
 
-      fragment.appendChild(row)
+      fragment.appendChild(card)
     })
 
     tabla.appendChild(fragment)
   }
 
   // ────────────────────────────────────────────────────────────────
-  // 5. RENDER DETALLE DE PRÉSTAMO (CUOTAS)
+  // 5. RENDER DETALLE DE PRÉSTAMO (Premium)
   // ────────────────────────────────────────────────────────────────
 
   const renderPrestamoDetail = (prestamo, cuotas, nombreCliente) => {
@@ -264,63 +290,115 @@ export const initPrestamosController = (dom, store, appCtrl) => {
 
     const montoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(prestamo.monto_original)
     const saldoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(prestamo.saldo_pendiente || prestamo.monto_original)
+    
+    // Calcular interés total estimado (simplificado para el render)
+    const interesEstimado = (prestamo.monto_original * (prestamo.tasa_interes / 100))
+    const interesFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(interesEstimado)
 
     detailView.innerHTML = `
       <div class="detail-header">
-        <h2>Préstamo de ${nombreCliente}</h2>
-        <div class="detail-metrics">
-          <div class="metric-card">
-            <span class="metric-label">Monto Original</span>
-            <span class="metric-value">${montoFmt}</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-label">Saldo Pendiente</span>
-            <span class="metric-value">${saldoFmt}</span>
-          </div>
-          <div class="metric-card">
-            <span class="metric-label">Estado</span>
-            <span class="metric-value badge ${prestamo.estado === 'ACTIVO' ? 'estado-activo' : ''}">${prestamo.estado}</span>
-          </div>
+        <button class="btn-back-circle" id="btn-prestamo-detail-back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <span class="detail-label">Detalle del Préstamo</span>
+      </div>
+
+      <div class="detail-profile">
+        <div class="avatar-large" style="background: var(--color-primary-light); color: var(--color-primary);">
+           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+        </div>
+        <h2 class="detail-name">${nombreCliente}</h2>
+        <span class="badge ${prestamo.estado === 'ACTIVO' ? 'badge--primary' : 'badge--success'}">${prestamo.estado || 'ACTIVO'}</span>
+      </div>
+
+      <h3 class="detail-section-title">Resumen Financiero</h3>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <span class="detail-label">Monto Aprobado</span>
+          <span class="detail-value" style="color: var(--color-primary); font-weight: 700;">${montoFmt}</span>
+        </div>
+        <div class="detail-card">
+          <span class="detail-label">Interés (${prestamo.tasa_interes}%)</span>
+          <span class="detail-value">${interesFmt}</span>
+        </div>
+        <div class="detail-card">
+          <span class="detail-label">Saldo Pendiente</span>
+          <span class="detail-value" style="color: var(--color-danger);">${saldoFmt}</span>
+        </div>
+        <div class="detail-card">
+          <span class="detail-label">Frecuencia</span>
+          <span class="detail-value">${prestamo.frecuencia_pago}</span>
         </div>
       </div>
-      
-      <div class="detail-body" style="margin-top: 20px;">
-        <h3>Tabla de Cuotas</h3>
-        <div class="table-container">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>No.</th>
-                <th>Vencimiento</th>
-                <th>Monto Total</th>
-                <th>Cobrado</th>
-                <th>Saldo</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${cuotas.length === 0 ? '<tr><td colspan="7" style="text-align:center;">No hay cuotas generadas</td></tr>' : 
-                cuotas.map(c => {
-                  const estadoClass = c.estado === 'PENDIENTE' ? 'estado-pendiente' : c.estado === 'PAGADA' ? 'estado-pagado' : 'riesgo-high'
-                  return `
-                  <tr>
-                    <td>${c.numero_cuota}</td>
-                    <td>${c.fecha_vencimiento}</td>
-                    <td>${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(c.monto_total)}</td>
-                    <td>${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(c.monto_pagado)}</td>
-                    <td>${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(c.saldo_pendiente || c.monto_total)}</td>
-                    <td><span class="badge ${estadoClass}">${c.estado}</span></td>
-                    <td>
-                      <button class="btn btn-sm btn-primary" ${c.estado === 'PAGADA' ? 'disabled' : ''}>Pagar</button>
-                    </td>
-                  </tr>`
-                }).join('')}
-            </tbody>
-          </table>
-        </div>
+
+      <h3 class="detail-section-title">Plan de Pagos / Cuotas</h3>
+      <div class="table-container" style="background: var(--color-surface); border-radius: 12px; margin: 0 16px; overflow: hidden; box-shadow: var(--shadow-sm);">
+        <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+          <thead style="background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--color-border);">
+            <tr>
+              <th style="padding: 12px; text-align: left;">No.</th>
+              <th style="padding: 12px; text-align: left;">Vencimiento</th>
+              <th style="padding: 12px; text-align: right;">Monto</th>
+              <th style="padding: 12px; text-align: center;">Estado</th>
+              <th style="padding: 12px; text-align: center;">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${cuotas.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding: 20px;">No hay cuotas generadas</td></tr>' : 
+              cuotas.map(c => {
+                const estClass = c.estado === 'PENDIENTE' ? 'badge--warning' : c.estado === 'PAGADA' ? 'badge--success' : 'badge--danger'
+                const cuotaMontoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(c.monto_total)
+                const isPendiente = c.estado === 'PENDIENTE'
+                return `
+                <tr style="border-bottom: 1px solid var(--color-border-light);">
+                  <td style="padding: 12px;">${c.numero_cuota}</td>
+                  <td style="padding: 12px;">${c.fecha_vencimiento}</td>
+                  <td style="padding: 12px; text-align: right; font-weight: 600;">${cuotaMontoFmt}</td>
+                  <td style="padding: 12px; text-align: center;"><span class="badge ${estClass}" style="font-size: 0.65rem;">${c.estado}</span></td>
+                  <td style="padding: 12px; text-align: center;">
+                    ${isPendiente ? `<button class="btn btn-sm btn-ghost btn-pagar" data-id="${c.id}">Pagar</button>` : '—'}
+                  </td>
+                </tr>`
+              }).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="detail-actions-bar" style="padding-bottom: 40px;">
+        <button class="btn btn-primary btn-full" id="btn-amortizacion">Ver Tabla de Amortización</button>
       </div>
     `
+
+    // Eventos
+    detailView.querySelector('#btn-prestamo-detail-back').onclick = () => appCtrl.showView('prestamos')
+    
+    // Bind pagar cuotas
+    detailView.querySelectorAll('.btn-pagar').forEach(btn => {
+      btn.onclick = async (e) => {
+        const cuotaId = btn.dataset.id
+        if (confirm('¿Desea marcar esta cuota como PAGADA?')) {
+          try {
+            store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
+            await cuotasDataAdapter.update(cuotaId, { 
+              estado: 'PAGADA',
+              fecha_pago: new Date().toISOString()
+            })
+            showSuccess('Pago registrado exitosamente')
+            
+            // Recargar datos para refrescar la vista
+            const nuevasCuotas = await cuotasDataAdapter.getByPrestamo(prestamo.id)
+            renderPrestamoDetail(prestamo, nuevasCuotas, nombreCliente)
+            
+          } catch (err) {
+            showError('Error al registrar pago: ' + err.message)
+          } finally {
+            store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
+          }
+        }
+      }
+    })
+
+    appCtrl.showView('prestamo-detail')
   }
 
   // ────────────────────────────────────────────────────────────────

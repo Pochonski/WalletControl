@@ -292,14 +292,19 @@ export const initClientesController = (dom, store, appCtrl) => {
       </div>
 
       <div class="detail-actions-bar">
+        <button class="btn btn-primary" id="btn-detail-prestamos">Ver Préstamos</button>
         <button class="btn btn-secondary" id="btn-detail-editar">Editar perfil</button>
-        <button class="btn btn-danger" id="btn-detail-eliminar">Eliminar cliente</button>
+        <button class="btn btn-danger" id="btn-detail-eliminar" style="flex: 0.5;">×</button>
       </div>
     `
 
     // Eventos
     detailContainer.querySelector('#btn-detail-back').onclick = () => appCtrl.showView('clientes')
     
+    detailContainer.querySelector('#btn-detail-prestamos').onclick = () => {
+      appCtrl.showView('prestamos')
+    }
+
     detailContainer.querySelector('#btn-detail-editar').onclick = () => {
       editarCliente(cliente)
     }

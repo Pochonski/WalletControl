@@ -15,6 +15,7 @@ import { initAppController } from './app/controllers/appController.js'
 import { initLoginController } from './auth/ui/loginController.js'
 import { initClientesController } from './clientes/ui/clientesController.js'
 import { initPrestamosController } from './prestamos/ui/prestamosController.js'
+import { initDashboardController } from './app/controllers/dashboardController.js'
 import { DOM_IDS } from './app/ui/domIds.js'
 import { getEl } from './app/ui/domAdapter.js'
 
@@ -45,3 +46,4 @@ const domContext = {
 // Inicializar controladores de dominio
 initClientesController(domContext, store, appCtrl)
 initPrestamosController(domContext, store, appCtrl)
+initDashboardController(store, appCtrl)

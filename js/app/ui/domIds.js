@@ -23,6 +23,7 @@ export const DOM_IDS = Object.freeze({
   NAV_DASHBOARD:         'nav-dashboard',
   NAV_CLIENTES:          'nav-clientes',
   NAV_COBRANZA:          'nav-cobranza',
+  NAV_PRESTAMOS:         'nav-prestamos',
   NAV_ACTIVOS:           'nav-activos',
   NAV_REPORTES:          'nav-reportes',
 

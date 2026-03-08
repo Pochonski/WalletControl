@@ -8,6 +8,7 @@
 
 import { supabaseClient } from '../supabaseClient.js'
 import { localStorageAdapter } from '../localStorageAdapter.js'
+import { auditAdapter } from '../auditAdapter.js'
 
 export const cuotasDataAdapter = {
   /**
@@ -35,6 +36,36 @@ export const cuotasDataAdapter = {
       console.error('[cuotasDataAdapter.getByPrestamo]', err.message)
       // Fallback local
       return localStorageAdapter.get(`cuotas_${prestamoId}`) || []
+    }
+  },
+
+  /**
+   * Actualizar estado de una cuota (ej. marcar como PAGADA)
+   */
+  update: async (cuotaId, cambios) => {
+    try {
+      const { data, error } = await supabaseClient
+        .from('cuotas')
+        .update(cambios)
+        .eq('id', cuotaId)
+        .select()
+
+      if (error) throw error
+
+      const resultado = data[0]
+
+      // Actualizar local (opcionalmente se podría actualizar el array guardado)
+      // localStorageAdapter.set(`cuotas_${resultado.prestamo_id}`, ...)
+
+      // Auditoría
+      await auditAdapter.log('UPDATE', 'cuotas', cuotaId, {
+        cambios: Object.keys(cambios)
+      })
+
+      return resultado
+    } catch (err) {
+      console.error('[cuotasDataAdapter.update]', err.message)
+      throw err
     }
   }
 }
