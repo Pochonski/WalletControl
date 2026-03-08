@@ -25,6 +25,7 @@ export const initCobranzasListController = (dom, store, appCtrl) => {
   const filtros = cobranzasSection.filtros
   const btnRefresh = cobranzasSection.btnRefresh
   const searchInput = cobranzasSection.searchInput
+  const metricsContainer = document.getElementById('cobranzas-metrics')
 
   // ────────────────────────────────────────────────────────────────
   // 1. CARGAR cobranzas al iniciar
@@ -33,18 +34,17 @@ export const initCobranzasListController = (dom, store, appCtrl) => {
   const cargarCobranzas = async () => {
     store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
     try {
-      const [overduePayments, activeCollections] = await Promise.all([
-        cobranzasDataAdapter.loadOverduePayments(),
-        cobranzasDataAdapter.loadActiveCollections()
-      ])
+      const activeCollections = await cobranzasDataAdapter.loadActiveCollections()
 
-      // Combinar y procesar datos
-      const allCollections = processCollectionsData(overduePayments, activeCollections)
+      // Procesar datos para añadir cálculos de mora y prioridad
+      const allCollections = processCollectionsData(activeCollections)
 
       store.dispatch({
         type: ACTION_TYPES.LOAD_COBRANZAS,
         payload: allCollections
       })
+      
+      renderMetrics()
     } catch (err) {
       console.error('[cobranzasListController] Error loading:', err)
       showError('Error al cargar cobranzas: ' + err.message)
@@ -57,38 +57,24 @@ export const initCobranzasListController = (dom, store, appCtrl) => {
   // 2. PROCESAR datos de cobranzas
   // ────────────────────────────────────────────────────────────────
 
-  const processCollectionsData = (overduePayments, activeCollections) => {
-    // Crear mapa de collections activas por payment_id
-    const activeMap = new Map()
-    activeCollections.forEach(collection => {
-      activeMap.set(collection.payment_id, collection)
-    })
-
-    // Procesar overdue payments
-    const processedCollections = overduePayments.map(payment => {
-      const existingCollection = activeMap.get(payment.payment_id)
+  const processCollectionsData = (collections) => {
+    return collections.map(item => {
       const calculations = calculateTotalOwed({
-        due_date: payment.due_date,
-        amount: payment.amount_due
+        due_date: item.due_date,
+        amount: item.amount_due
       })
 
       return {
-        ...payment,
-        ...existingCollection,
-        // Sobreescribir con cálculos actualizados
+        ...item,
         total_owed: calculations.totalOwed,
         days_late: calculations.daysLate,
         scale: calculations.scale,
         priority: getCollectionPriority({
           amount_due: calculations.totalOwed,
           days_late: calculations.daysLate
-        }),
-        status: existingCollection?.status || COLLECTION_STATUS.PENDING
+        })
       }
-    })
-
-    // Ordenar por prioridad (más urgente primero)
-    return processedCollections.sort((a, b) => b.priority - a.priority)
+    }).sort((a, b) => b.priority - a.priority)
   }
 
   // ────────────────────────────────────────────────────────────────
@@ -175,7 +161,57 @@ export const initCobranzasListController = (dom, store, appCtrl) => {
   }
 
   // ────────────────────────────────────────────────────────────────
-  // 6. RENDER de lista
+  // 6. RENDER de métricas
+  // ────────────────────────────────────────────────────────────────
+
+  const renderMetrics = async () => {
+    if (!metricsContainer) return
+
+    try {
+      const metrics = await cobranzasDataAdapter.getCollectionMetrics()
+      
+      const totalOverdueFmt = new Intl.NumberFormat('es-DO', { 
+        style: 'currency', 
+        currency: 'DOP', 
+        maximumFractionDigits: 0 
+      }).format(metrics.totalOverdueAmount)
+
+      metricsContainer.innerHTML = `
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(220, 38, 38, 0.1); color: var(--color-danger);">
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div class="metric-info">
+            <span class="metric-value">${metrics.overduePaymentsCount}</span>
+            <span class="metric-label">Cuotas Vencidas</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--color-success);">
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div class="metric-info">
+            <span class="metric-value">${totalOverdueFmt}</span>
+            <span class="metric-label">Total en Mora</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(29, 78, 216, 0.1); color: var(--color-primary);">
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="metric-info">
+            <span class="metric-value">${Math.round(metrics.effectivenessRate)}%</span>
+            <span class="metric-label">Efectividad</span>
+          </div>
+        </div>
+      `
+    } catch (err) {
+      console.error('[cobranzasListController] Error rendering metrics:', err)
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // 7. RENDER de lista
   // ────────────────────────────────────────────────────────────────
 
   const render = (collectionsToRender = null) => {
@@ -188,8 +224,8 @@ export const initCobranzasListController = (dom, store, appCtrl) => {
 
     if (collections.length === 0) {
       listaCobranzas.innerHTML = `
-        <div style="text-align: center; padding: 40px 20px; color: var(--color-text-light);">
-          <div style="font-size: 3rem; margin-bottom: 10px; opacity: 0.3;">💰</div>
+        <div class="empty-state">
+          <div class="empty-icon">💰</div>
           <p>No hay cobranzas pendientes</p>
           <small>Todas las cuotas están al día</small>
         </div>
@@ -201,14 +237,17 @@ export const initCobranzasListController = (dom, store, appCtrl) => {
 
     collections.forEach(collection => {
       const card = document.createElement('div')
-      card.className = 'card cobranza-card'
+      card.className = 'card premium-card cobranza-card'
       card.dataset.id = collection.id || collection.payment_id
 
-      // Clases CSS según escala y estado
-      const scaleClass = getScaleClass(collection.scale)
-      const statusClass = getStatusClass(collection.status)
+      const calculations = calculateTotalOwed({
+        due_date: collection.due_date,
+        amount: collection.amount_due
+      })
 
-      // Iniciales del cliente
+      const scaleClass = getScaleClass(calculations.scale)
+      const statusClass = getStatusClass(collection.status)
+      
       const iniciales = (collection.client_name || '??')
         .split(' ')
         .filter(n => n)
@@ -217,44 +256,62 @@ export const initCobranzasListController = (dom, store, appCtrl) => {
         .toUpperCase()
         .substring(0, 2)
 
+      const montoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(calculations.totalOwed)
+      const moraFmt = calculations.lateAmount > 0 
+        ? `<span class="mora-tag">+ ${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(calculations.lateAmount - calculations.originalAmount)} mora</span>`
+        : ''
+
       card.innerHTML = `
-        <div class="card-avatar">${iniciales}</div>
-        <div class="card-body">
-          <div class="card-title">${collection.client_name || 'Cliente desconocido'}</div>
-          <div class="card-subtitle">Cuota #${collection.payment_id}</div>
-          <div class="card-meta">
-            <span class="badge ${scaleClass}">${collection.scale?.toUpperCase() || 'PENDING'}</span>
-            <span class="badge ${statusClass}">${getStatusText(collection.status)}</span>
+        <div class="card-header-main">
+          <div class="card-avatar-wrapper">
+             <div class="card-avatar ${scaleClass}">${iniciales}</div>
+             <div class="status-indicator ${statusClass}"></div>
           </div>
-          <div class="cobranza-amount">
-            <strong>$${collection.total_owed?.toLocaleString() || collection.amount_due?.toLocaleString()}</strong>
-            <small>${collection.days_late} días atraso</small>
+          <div class="card-title-group">
+            <div class="card-main-title">${collection.client_name || 'Cliente desconocido'}</div>
+            <div class="card-meta-line">
+              <span class="badge ${statusClass}">${getStatusText(collection.status)}</span>
+              <span class="badge ${scaleClass}">${calculations.scale?.toUpperCase()}</span>
+            </div>
+          </div>
+          <div class="card-price-primary">
+            ${montoFmt}
+            ${moraFmt}
           </div>
         </div>
-        <div class="card-right">
-          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-            <button class="btn-icon btn-contacted" title="Marcar como contactado">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-              </svg>
-            </button>
-            <button class="btn-icon btn-resolved" title="Marcar como resuelta" style="color: var(--color-success);">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </button>
-            <button class="btn-icon btn-escalate" title="Escalar a legal" style="color: var(--color-danger);">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-            </button>
-          </div>
+        
+        <div class="card-content-grid">
+           <div class="content-item">
+             <span class="item-label">Cuota</span>
+             <span class="item-value">#${collection.payment_id.substring(0, 8)}</span>
+           </div>
+           <div class="content-item">
+             <span class="item-label">Vencimiento</span>
+             <span class="item-value">${new Date(collection.due_date).toLocaleDateString()}</span>
+           </div>
+           <div class="content-item">
+             <span class="item-label">Atraso</span>
+             <span class="item-value text-danger">${calculations.daysLate} días</span>
+           </div>
+        </div>
+
+        <div class="card-actions-row">
+          <button class="btn-card-action btn-contacted" title="Marcar como contactado">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Contactar
+          </button>
+          <button class="btn-card-action btn-resolved text-success" title="Cobranza resuelta">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Resolver
+          </button>
+          <button class="btn-card-action btn-detail">
+            Ver detalle
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
         </div>
       `
 
-      // Event listeners para acciones rápidas
+      // Event listeners
       card.querySelector('.btn-contacted')?.addEventListener('click', (e) => {
         e.stopPropagation()
         handleQuickAction(collection.id || collection.payment_id, 'contacted')
@@ -265,14 +322,6 @@ export const initCobranzasListController = (dom, store, appCtrl) => {
         handleQuickAction(collection.id || collection.payment_id, 'resolved')
       })
 
-      card.querySelector('.btn-escalate')?.addEventListener('click', (e) => {
-        e.stopPropagation()
-        if (confirm('¿Escalar esta cobranza a proceso legal?')) {
-          handleQuickAction(collection.id || collection.payment_id, 'escalate')
-        }
-      })
-
-      // Click en card para ver detalle
       card.addEventListener('click', () => {
         verDetalleCobranza(collection.id || collection.payment_id)
       })
@@ -309,6 +358,7 @@ export const initCobranzasListController = (dom, store, appCtrl) => {
   store.subscribe((newState, previousState) => {
     if (newState.cobranzas !== previousState.cobranzas) {
       render()
+      renderMetrics()
     }
   })
 
@@ -332,6 +382,7 @@ function getScaleClass(scale) {
     case 'high': return 'badge--danger'
     case 'medium': return 'badge--warning'
     case 'low': return 'badge--info'
+    case 'current': return 'badge--success'
     default: return 'badge--secondary'
   }
 }
@@ -355,12 +406,15 @@ function getStatusClass(status) {
 function getStatusText(status) {
   const statusTexts = {
     [COLLECTION_STATUS.PENDING]: 'Pendiente',
+    'pendiente': 'Pendiente',
+    'vencida': 'Vencida',
     [COLLECTION_STATUS.IN_PROGRESS]: 'En proceso',
     [COLLECTION_STATUS.CONTACTED]: 'Contactado',
     [COLLECTION_STATUS.NEGOTIATED]: 'Negociado',
     [COLLECTION_STATUS.RESOLVED]: 'Resuelto',
     [COLLECTION_STATUS.CANCELLED]: 'Cancelado',
-    [COLLECTION_STATUS.LEGAL]: 'Legal'
+    [COLLECTION_STATUS.LEGAL]: 'Legal',
+    'current': 'Al día'
   }
   return statusTexts[status] || 'Desconocido'
 }

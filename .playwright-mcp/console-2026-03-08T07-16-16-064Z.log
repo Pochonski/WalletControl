@@ -1,0 +1,4 @@
+[      79ms] [ERROR] [clientesDataAdapter.load] No autorizado @ http://localhost:3000/js/adapters/dataAdapters/clientesDataAdapter.js?t=1772954171942:44
+[      80ms] [ERROR] [prestamosDataAdapter.load] No autorizado @ http://localhost:3000/js/adapters/dataAdapters/prestamosDataAdapter.js?t=1772954171857:42
+[      80ms] [ERROR] [cobranzasDataAdapter.loadOverduePayments] No autorizado @ http://localhost:3000/js/adapters/cobranzasDataAdapter.js?t=1772954172329:72
+[      80ms] [ERROR] [cobranzasDataAdapter.loadActiveCollections] No autorizado @ http://localhost:3000/js/adapters/cobranzasDataAdapter.js?t=1772954172329:126

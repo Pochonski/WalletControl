@@ -17,6 +17,11 @@ export const cuotasDataAdapter = {
    */
   getByPrestamo: async (prestamoId) => {
     try {
+      // Si el préstamo se guardó offline, tiene un id temporal
+      if (typeof prestamoId === 'string' && prestamoId.startsWith('temp-')) {
+        return localStorageAdapter.get(`cuotas_${prestamoId}`) || []
+      }
+
       const { data: { user } } = await supabaseClient.auth.getUser()
       if (!user) throw new Error('No autorizado')
 

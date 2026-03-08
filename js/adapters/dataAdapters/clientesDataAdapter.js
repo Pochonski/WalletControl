@@ -99,7 +99,19 @@ export const clientesDataAdapter = {
     } catch (err) {
       console.error('[clientesDataAdapter.save]', err.message)
 
-      // Fallback offline: guardar con ID temporal
+      // Errores que NO deben tratarse como "sin conexión":
+      // - Cédula duplicada (constraint violation)
+      // - No autorizado (usuario no logueado)
+      if (
+        err.code === '23505' ||
+        err.message?.toLowerCase().includes('duplicate') ||
+        err.message?.toLowerCase().includes('unique') ||
+        err.message === 'No autorizado'
+      ) {
+        throw err
+      }
+
+      // Fallback offline: guardar con ID temporal (solo para errores de red)
       const clienteOffline = {
         ...cliente,
         id: `temp-${Date.now()}`,

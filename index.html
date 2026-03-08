@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,6 +11,7 @@
   <title>Prestamistas</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
+
 <body>
   <div id="app-root">
 
@@ -28,7 +30,7 @@
     <section id="view-login" class="view view-auth">
       <div class="login-container">
         <div class="login-logo">
-          <div class="login-logo-icon">$</div>
+          <div class="login-logo-icon"></div>
           <h1>Prestamistas</h1>
           <p>Gestión de préstamos e inversiones</p>
         </div>
@@ -36,37 +38,19 @@
         <form id="login-form" class="login-form" novalidate autocomplete="on">
           <div id="register-name-group" class="form-group hidden">
             <label for="login-name">Nombre completo</label>
-            <input
-              id="login-name"
-              type="text"
-              placeholder="Juan Pérez"
-              autocomplete="name"
-              minlength="2"
-            >
+            <input id="login-name" type="text" placeholder="Juan Pérez" autocomplete="name" minlength="2">
           </div>
 
           <div class="form-group">
             <label for="login-email">Correo electrónico</label>
-            <input
-              id="login-email"
-              type="email"
-              placeholder="usuario@ejemplo.com"
-              autocomplete="email"
-              required
-              inputmode="email"
-            >
+            <input id="login-email" type="email" placeholder="usuario@ejemplo.com" autocomplete="email" required
+              inputmode="email">
           </div>
 
           <div class="form-group">
             <label for="login-password">Contraseña</label>
-            <input
-              id="login-password"
-              type="password"
-              placeholder="••••••••"
-              autocomplete="current-password"
-              required
-              minlength="6"
-            >
+            <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" required
+              minlength="6">
           </div>
 
           <div id="login-error" class="form-error hidden" role="alert"></div>
@@ -90,24 +74,26 @@
       <!-- Header -->
       <header id="app-header" class="app-header">
         <button id="btn-back" class="btn-icon hidden" aria-label="Volver" type="button">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
         <h1 id="app-title" class="app-title">Prestamistas</h1>
         <div class="header-actions">
           <span id="sync-indicator" class="sync-indicator hidden" title="Cambios pendientes de sincronizar">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="23 4 23 10 17 10"/>
-              <polyline points="1 20 1 14 7 14"/>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              <polyline points="23 4 23 10 17 10" />
+              <polyline points="1 20 1 14 7 14" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
             </svg>
           </span>
           <button id="btn-logout" class="btn-icon" aria-label="Cerrar sesión" type="button">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
           </button>
         </div>
@@ -132,8 +118,10 @@
         <section id="view-clientes" class="view">
           <div class="view-toolbar">
             <div class="search-wrapper">
-              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               <input id="clientes-search" type="search" class="search-input" placeholder="Nombre o teléfono...">
             </div>
@@ -157,7 +145,8 @@
               </div>
               <div class="form-group">
                 <label for="cliente-cedula">Cédula / Documento *</label>
-                <input id="cliente-cedula" name="cedula" type="text" placeholder="000-0000000-0" required inputmode="numeric">
+                <input id="cliente-cedula" name="cedula" type="text" placeholder="000-0000000-0" required
+                  inputmode="numeric">
               </div>
               <div class="form-group">
                 <label for="cliente-telefono">Teléfono</label>
@@ -169,7 +158,8 @@
               </div>
               <div class="form-group">
                 <label for="cliente-direccion">Dirección</label>
-                <textarea id="cliente-direccion" name="direccion" rows="2" placeholder="Calle, número, ciudad..."></textarea>
+                <textarea id="cliente-direccion" name="direccion" rows="2"
+                  placeholder="Calle, número, ciudad..."></textarea>
               </div>
               <div class="form-group">
                 <label for="cliente-nacimiento">Fecha de nacimiento</label>
@@ -181,7 +171,8 @@
               <h3 class="form-section-title">Contacto alternativo</h3>
               <div class="form-group">
                 <label for="cliente-contacto-emergencia">Contacto de emergencia</label>
-                <input id="cliente-contacto-emergencia" name="contacto_emergencia" type="text" placeholder="Nombre del contacto">
+                <input id="cliente-contacto-emergencia" name="contacto_emergencia" type="text"
+                  placeholder="Nombre del contacto">
               </div>
               <div class="form-group">
                 <label for="cliente-telefono-emergencia">Teléfono de emergencia</label>
@@ -201,7 +192,8 @@
               </div>
               <div class="form-group">
                 <label for="cliente-notas">Notas internas</label>
-                <textarea id="cliente-notas" name="notas" rows="3" placeholder="Observaciones sobre el cliente..."></textarea>
+                <textarea id="cliente-notas" name="notas" rows="3"
+                  placeholder="Observaciones sobre el cliente..."></textarea>
               </div>
             </div>
 
@@ -240,8 +232,10 @@
         <section id="view-prestamos" class="view">
           <div class="view-toolbar">
             <div class="search-wrapper">
-              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               <input id="prestamos-search" type="search" class="search-input" placeholder="Buscar cliente...">
             </div>
@@ -265,41 +259,66 @@
               </div>
             </div>
             <div class="form-section">
-              <h3 class="form-section-title">Condiciones del préstamo</h3>
-              <div class="form-group">
-                <label for="prestamo-monto">Monto a prestar *</label>
-                <input id="prestamo-monto" name="monto" type="number" min="1" step="0.01" placeholder="0.00" required inputmode="decimal">
-              </div>
-              <div class="form-group">
-                <label for="prestamo-tasa">Tasa de interés mensual (%) *</label>
-                <input id="prestamo-tasa" name="tasa" type="number" min="0" step="0.01" placeholder="10.00" required inputmode="decimal">
-              </div>
-              <div class="form-group">
-                <label for="prestamo-tipo">Tipo de interés *</label>
-                <select id="prestamo-tipo" name="tipo" required>
-                  <option value="SIMPLE">Simple (interés fijo sobre capital)</option>
-                  <option value="COMPUESTO">Compuesto (anualidad)</option>
-                  <option value="MIXTO">Mixto (sobre saldo insoluto)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="prestamo-frecuencia">Frecuencia de pago *</label>
-                <select id="prestamo-frecuencia" name="frecuencia" required>
-                  <option value="MENSUAL">Mensual</option>
-                  <option value="QUINCENAL">Quincenal</option>
-                  <option value="SEMANAL">Semanal</option>
-                  <option value="DIARIA">Diaria</option>
-                </select>
-              </div>
+              <h3 class="form-section-title">DATOS DEL PRESTAMO</h3>
+
               <div class="form-row">
                 <div class="form-group">
-                  <label for="prestamo-fecha-inicio">Fecha inicio *</label>
-                  <input id="prestamo-fecha-inicio" name="fecha_inicio" type="date" required>
+                  <label for="prestamo-tipo">Amortización *</label>
+                  <select id="prestamo-tipo" name="tipo" required>
+                    <option value="" disabled selected>Seleccione</option>
+                    <option value="CUOTA_FIJA">Cuota Fija</option>
+                    <option value="DISMINUIR_CUOTA">Disminuir Cuota</option>
+                    <option value="INTERES_FIJO">Interes Fijo</option>
+                    <option value="CAPITAL_AL_FINAL">Capital Al Final</option>
+                  </select>
                 </div>
                 <div class="form-group">
-                  <label for="prestamo-fecha-fin">Fecha fin *</label>
-                  <input id="prestamo-fecha-fin" name="fecha_fin" type="date" required>
+                  <label for="prestamo-frecuencia">Modalidad *</label>
+                  <select id="prestamo-frecuencia" name="frecuencia" required>
+                    <option value="" disabled selected>Seleccione</option>
+                    <option value="DIARIO">Diario</option>
+                    <option value="INTERDIARIO">Interdiario</option>
+                    <option value="SEMANAL">Semanal</option>
+                    <option value="BISEMANAL">Bisemanal</option>
+                    <option value="QUINCENAL">Quincenal</option>
+                    <option value="15_Y_FIN_MES">15 y fin de mes</option>
+                    <option value="MENSUAL">Mensual</option>
+                    <option value="ANUAL">Anual</option>
+                  </select>
                 </div>
+              </div>
+
+              <div class="form-group">
+                <label for="prestamo-monto">Monto A Prestar *</label>
+                <input id="prestamo-monto" name="monto" type="number" min="0.01" step="0.01" placeholder="₡0.00"
+                  required inputmode="decimal">
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="prestamo-tasa">Interés *</label>
+                  <input id="prestamo-tasa" name="tasa" type="number" min="0" step="0.01" placeholder="%" required
+                    inputmode="decimal">
+                </div>
+                <div class="form-group">
+                  <!-- Espacio vacío o podría ir otro campo en el futuro -->
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="prestamo-monto-cuotas">Monto Cuotas</label>
+                  <input id="prestamo-monto-cuotas" type="text" placeholder="₡0.00" readonly>
+                </div>
+                <div class="form-group">
+                  <label for="prestamo-fecha">Fecha *</label>
+                  <input id="prestamo-fecha" name="fecha_inicio" type="date" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="prestamo-fecha-primer-pago">Fecha Primer Pago *</label>
+                <input id="prestamo-fecha-primer-pago" name="fecha_primer_pago" type="date" required>
               </div>
             </div>
             <div id="prestamo-resumen" class="loan-summary hidden"></div>
@@ -332,7 +351,8 @@
               <h3 class="form-section-title">Datos del pago</h3>
               <div class="form-group">
                 <label for="pago-monto">Monto *</label>
-                <input id="pago-monto" type="number" min="0.01" step="0.01" placeholder="0.00" required inputmode="decimal">
+                <input id="pago-monto" type="number" min="0.01" step="0.01" placeholder="0.00" required
+                  inputmode="decimal">
               </div>
               <div class="form-group">
                 <label for="pago-fecha">Fecha de pago *</label>
@@ -359,7 +379,8 @@
             <div class="form-section">
               <h3 class="form-section-title">Comprobante (opcional)</h3>
               <div class="upload-item">
-                <input id="upload-comprobante" type="file" accept="image/jpeg,image/png,application/pdf" capture="environment">
+                <input id="upload-comprobante" type="file" accept="image/jpeg,image/png,application/pdf"
+                  capture="environment">
                 <div id="preview-comprobante" class="photo-preview hidden"></div>
               </div>
             </div>
@@ -377,8 +398,10 @@
         <section id="view-activos" class="view">
           <div class="view-toolbar">
             <div class="search-wrapper">
-              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               <input id="activos-search" type="search" class="search-input" placeholder="Buscar activo...">
             </div>
@@ -424,11 +447,13 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="activo-costo">Costo de compra *</label>
-                  <input id="activo-costo" name="costo_compra" type="number" min="0.01" step="0.01" placeholder="0.00" required inputmode="decimal">
+                  <input id="activo-costo" name="costo_compra" type="number" min="0.01" step="0.01" placeholder="0.00"
+                    required inputmode="decimal">
                 </div>
                 <div class="form-group">
                   <label for="activo-precio-esperado">Precio venta esperado</label>
-                  <input id="activo-precio-esperado" name="precio_venta_esperado" type="number" min="0" step="0.01" placeholder="0.00" inputmode="decimal">
+                  <input id="activo-precio-esperado" name="precio_venta_esperado" type="number" min="0" step="0.01"
+                    placeholder="0.00" inputmode="decimal">
                 </div>
               </div>
               <div class="form-group">
@@ -437,19 +462,22 @@
               </div>
               <div class="form-group">
                 <label for="activo-cantidad">Cantidad</label>
-                <input id="activo-cantidad" name="cantidad" type="number" min="1" step="1" value="1" inputmode="numeric">
+                <input id="activo-cantidad" name="cantidad" type="number" min="1" step="1" value="1"
+                  inputmode="numeric">
               </div>
             </div>
             <div class="form-section">
               <h3 class="form-section-title">Fotos del activo</h3>
               <div id="upload-fotos-activo" class="upload-area">
-                <input id="upload-fotos-activo-input" type="file" accept="image/jpeg,image/png" multiple capture="environment">
+                <input id="upload-fotos-activo-input" type="file" accept="image/jpeg,image/png" multiple
+                  capture="environment">
                 <div id="preview-fotos-activo" class="photo-gallery"></div>
               </div>
             </div>
             <div class="form-group">
               <label for="activo-notas">Notas</label>
-              <textarea id="activo-notas" name="notas" rows="2" placeholder="Estado, condición, observaciones..."></textarea>
+              <textarea id="activo-notas" name="notas" rows="2"
+                placeholder="Estado, condición, observaciones..."></textarea>
             </div>
             <div id="activo-form-error" class="form-error hidden" role="alert"></div>
             <div class="form-actions">
@@ -465,36 +493,44 @@
         <section id="view-cobranza" class="view">
           <div class="view-toolbar">
             <div class="search-wrapper">
-              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               <input id="cobranzas-search" type="search" class="search-input" placeholder="Buscar cliente...">
             </div>
             <button id="cobranzas-btn-refresh" class="btn btn-secondary btn-sm" type="button">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
               </svg>
             </button>
           </div>
+          <div id="cobranzas-metrics" class="metrics-grid"></div>
 
           <div id="cobranzas-filter-bar" class="filter-bar">
-            <select id="filtro-estado">
-              <option value="">Todos los estados</option>
-              <option value="pending">Pendientes</option>
-              <option value="in_progress">En proceso</option>
-              <option value="contacted">Contactados</option>
-              <option value="negotiated">Negociados</option>
-              <option value="resolved">Resueltos</option>
-              <option value="cancelled">Cancelados</option>
-              <option value="legal">Legal</option>
-            </select>
-            <select id="filtro-escala">
-              <option value="">Todas las escalas</option>
-              <option value="low">Baja</option>
-              <option value="medium">Media</option>
-              <option value="high">Alta</option>
-              <option value="critical">Crítica</option>
-            </select>
+            <div class="filter-group">
+              <label for="filtro-estado">Estado</label>
+              <select id="filtro-estado">
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendientes</option>
+                <option value="vencida">Vencidas</option>
+                <option value="parcialmente_pagada">Pago parcial</option>
+                <option value="pagada">Pagadas</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filtro-escala">Prioridad</label>
+              <select id="filtro-escala">
+                <option value="">Todas las escalas</option>
+                <option value="low">Baja (Sin atraso)</option>
+                <option value="medium">Media (1-30 días)</option>
+                <option value="high">Alta (31-60 días)</option>
+                <option value="critical">Crítica (+60 días)</option>
+              </select>
+            </div>
           </div>
 
           <div id="cobranzas-list" class="card-list"></div>
@@ -542,7 +578,8 @@
                 </div>
                 <div class="form-group">
                   <label for="action-description">Descripción *</label>
-                  <textarea id="action-description" rows="3" placeholder="Detalles de la acción realizada..." required></textarea>
+                  <textarea id="action-description" rows="3" placeholder="Detalles de la acción realizada..."
+                    required></textarea>
                 </div>
                 <div class="form-group">
                   <label for="action-date">Fecha de acción</label>
@@ -582,53 +619,64 @@
       <!-- ================================================================ -->
       <nav id="bottom-nav" class="bottom-nav" aria-label="Navegación principal">
         <button id="nav-dashboard" class="nav-item" data-view="dashboard" type="button" aria-label="Dashboard">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
           </svg>
           <span>Inicio</span>
         </button>
 
         <button id="nav-clientes" class="nav-item" data-view="clientes" type="button" aria-label="Clientes">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
           </svg>
           <span>Clientes</span>
         </button>
 
         <button id="nav-prestamos" class="nav-item" data-view="prestamos" type="button" aria-label="Préstamos">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="6" width="20" height="12" rx="2"/>
-            <circle cx="12" cy="12" r="2"/>
-            <path d="M6 12h.01M18 12h.01"/>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="6" width="20" height="12" rx="2" />
+            <circle cx="12" cy="12" r="2" />
+            <path d="M6 12h.01M18 12h.01" />
           </svg>
           <span>Préstamos</span>
         </button>
 
-        <button id="nav-cobranza" class="nav-item nav-item-fab" data-view="cobranza" type="button" aria-label="Cobros de hoy">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
+        <button id="nav-cobranza" class="nav-item nav-item-fab" data-view="cobranza" type="button"
+          aria-label="Cobros de hoy">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
           <span>Cobros</span>
         </button>
 
         <button id="nav-activos" class="nav-item" data-view="activos" type="button" aria-label="Activos">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="1" x2="12" y2="23"/>
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23" />
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
           </svg>
           <span>Activos</span>
         </button>
 
         <button id="nav-reportes" class="nav-item" data-view="reportes" type="button" aria-label="Reportes">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="20" x2="18" y2="10"/>
-            <line x1="12" y1="20" x2="12" y2="4"/>
-            <line x1="6" y1="20" x2="6" y2="14"/>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
           </svg>
           <span>Reportes</span>
         </button>
@@ -640,4 +688,5 @@
 
   <script type="module" src="/js/main.js"></script>
 </body>
+
 </html>

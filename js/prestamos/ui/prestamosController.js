@@ -44,11 +44,11 @@ export const initPrestamosController = (dom, store, appCtrl) => {
       // Asegurarse de tener clientes para el select de "Nuevo Préstamo"
       const { clientes } = store.getState()
       if (!clientes.loaded) {
-          const loadedClientes = await clientesDataAdapter.load()
-          store.dispatch({
-              type: ACTION_TYPES.LOAD_CLIENTES,
-              payload: loadedClientes
-          })
+        const loadedClientes = await clientesDataAdapter.load()
+        store.dispatch({
+          type: ACTION_TYPES.LOAD_CLIENTES,
+          payload: loadedClientes
+        })
       }
 
       actualizarSelectClientes()
@@ -61,19 +61,19 @@ export const initPrestamosController = (dom, store, appCtrl) => {
   }
 
   const actualizarSelectClientes = () => {
-      if (!selectCliente) return
-      const { clientes } = store.getState()
-      
-      selectCliente.innerHTML = '<option value="">Seleccione un cliente...</option>'
-      clientes.list.forEach(c => {
-          if (c.estado !== 'ARCHIVADO') {
-              const option = document.createElement('option')
-              option.value = c.id
-              // Por si la cédula está desencriptada
-              option.textContent = `${c.nombre} ${c.cedula ? `(${c.cedula})` : ''}`
-              selectCliente.appendChild(option)
-          }
-      })
+    if (!selectCliente) return
+    const { clientes } = store.getState()
+
+    selectCliente.innerHTML = '<option value="">Seleccione un cliente...</option>'
+    clientes.list.forEach(c => {
+      if (c.estado !== 'ARCHIVADO') {
+        const option = document.createElement('option')
+        option.value = c.id
+        // Por si la cédula está desencriptada
+        option.textContent = `${c.nombre} ${c.cedula ? `(${c.cedula})` : ''}`
+        selectCliente.appendChild(option)
+      }
+    })
   }
 
   // ────────────────────────────────────────────────────────────────
@@ -87,18 +87,45 @@ export const initPrestamosController = (dom, store, appCtrl) => {
       const formData = new FormData(formulario)
       const data = Object.fromEntries(formData)
 
+      // Calcular fecha_fin asumiendo un préstamo indefinido si no hay cuotas (por defecto 120 periodos)
+      const frecuencia = data['frecuencia'] || document.getElementById('prestamo-frecuencia')?.value
+      const elcuotas = document.getElementById('prestamo-cuotas')
+      const inputCuotas = elcuotas ? parseInt(elcuotas.value, 10) : NaN
+      const cuotas = (!elcuotas || isNaN(inputCuotas)) ? (frecuencia === 'DIARIO' ? 365 : frecuencia === 'SEMANAL' ? 260 : 120) : inputCuotas
+      const fechaPrimerPagoStr = data['fecha_primer_pago'] || document.getElementById('prestamo-fecha-primer-pago')?.value
+
+      let fechaFin = null
+      if (fechaPrimerPagoStr && cuotas > 0) {
+        const dateObj = new Date(fechaPrimerPagoStr + 'T12:00:00') // Evitar zonas horarias
+        let diasParaSumar = 0;
+        switch (frecuencia) {
+          case 'DIARIO': diasParaSumar = 1; break;
+          case 'INTERDIARIO': diasParaSumar = 2; break;
+          case 'SEMANAL': diasParaSumar = 7; break;
+          case 'BISEMANAL': diasParaSumar = 14; break;
+          case 'QUINCENAL': diasParaSumar = 15; break;
+          case '15_Y_FIN_MES': diasParaSumar = 15; break;
+          case 'MENSUAL': diasParaSumar = 30; break;
+          case 'ANUAL': diasParaSumar = 365; break;
+          default: diasParaSumar = 30; // fallback a mensual
+        }
+        // Multiplicamos los días por las cuotas-1 ya que la cuota 1 es en la fecha del primer pago
+        dateObj.setDate(dateObj.getDate() + (diasParaSumar * Math.max(0, cuotas - 1)))
+        fechaFin = dateObj.toISOString().split('T')[0]
+      }
+
       const nuevoPrestamo = {
         cliente_id: data['cliente_id'] || document.getElementById('prestamo-cliente-id')?.value,
         monto_original: parseFloat(data['monto'] || document.getElementById('prestamo-monto')?.value),
         tasa_interes: parseFloat(data['tasa'] || document.getElementById('prestamo-tasa')?.value),
         tipo_interes: data['tipo'] || document.getElementById('prestamo-tipo')?.value,
-        frecuencia_pago: data['frecuencia'] || document.getElementById('prestamo-frecuencia')?.value,
-        fecha_inicio: data['fecha_inicio'] || document.getElementById('prestamo-fecha-inicio')?.value,
-        fecha_fin: data['fecha_fin'] || document.getElementById('prestamo-fecha-fin')?.value
+        frecuencia_pago: frecuencia,
+        fecha_inicio: data['fecha_inicio'] || document.getElementById('prestamo-fecha')?.value,
+        fecha_fin: fechaFin
       }
 
       // Validar básicos
-      if (!nuevoPrestamo.cliente_id || isNaN(nuevoPrestamo.monto_original)) {
+      if (!nuevoPrestamo.cliente_id || isNaN(nuevoPrestamo.monto_original) || !nuevoPrestamo.fecha_fin) {
         showError('Por favor complete los campos obligatorios.')
         return
       }
@@ -112,7 +139,7 @@ export const initPrestamosController = (dom, store, appCtrl) => {
         showSuccess('Préstamo creado exitosamente')
         formulario.reset()
         appCtrl.showView('prestamos')
-        
+
       } catch (err) {
         console.error('[prestamosController] Save error:', err)
         showError('Error: ' + err.message)
@@ -120,6 +147,48 @@ export const initPrestamosController = (dom, store, appCtrl) => {
         store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
       }
     })
+
+    // Calcular "Monto Cuotas" en vivo
+    const elmonto = document.getElementById('prestamo-monto')
+    const eltasa = document.getElementById('prestamo-tasa')
+    const elmontoCuotas = document.getElementById('prestamo-monto-cuotas')
+    const eltipo = document.getElementById('prestamo-tipo')
+    const elfrecuencia = document.getElementById('prestamo-frecuencia')
+
+    const actualizarCuotaEstimada = () => {
+      if (!elmonto || !eltasa || !elmontoCuotas || !eltipo) return
+      const monto = parseFloat(elmonto.value) || 0
+      const tasa = parseFloat(eltasa.value) || 0
+      const frec = elfrecuencia?.value || 'MENSUAL'
+
+      let diasParaSumar = 30;
+      switch (frec) {
+        case 'DIARIO': diasParaSumar = 1; break;
+        case 'INTERDIARIO': diasParaSumar = 2; break;
+        case 'SEMANAL': diasParaSumar = 7; break;
+        case 'BISEMANAL': diasParaSumar = 14; break;
+        case 'QUINCENAL': diasParaSumar = 15; break;
+        case '15_Y_FIN_MES': diasParaSumar = 15; break;
+        case 'MENSUAL': diasParaSumar = 30; break;
+        case 'ANUAL': diasParaSumar = 365; break;
+        default: diasParaSumar = 30;
+      }
+
+      // Debido a que son préstamos que pueden ser indefinidos, 
+      // calculamos el interés correspondiente al periodo seleccionado
+      const interesPorPeriodo = (monto * (tasa / 100)) / (30 / diasParaSumar)
+
+      const cuota = interesPorPeriodo;
+
+      elmontoCuotas.value = '₡' + cuota.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    }
+
+    if (elmonto) {
+      [elmonto, eltasa, eltipo, elfrecuencia].forEach(el => {
+        if (el) el.addEventListener('input', actualizarCuotaEstimada)
+        if (el) el.addEventListener('change', actualizarCuotaEstimada)
+      })
+    }
   }
 
   // ────────────────────────────────────────────────────────────────
@@ -158,7 +227,7 @@ export const initPrestamosController = (dom, store, appCtrl) => {
     tabla.innerHTML = ''
 
     const termino = inputBuscar ? inputBuscar.value.toLowerCase().trim() : ''
-    
+
     // Filtrar por término de búsqueda (nombre del cliente)
     const filteredList = list.filter(p => {
       if (!termino) return true
@@ -190,17 +259,17 @@ export const initPrestamosController = (dom, store, appCtrl) => {
       card.dataset.id = prestamo.id
 
       const estadoClass = prestamo.estado === 'MORA' ? 'badge--danger'
-        : prestamo.estado === 'PAGADO' ? 'badge--success' 
-        : prestamo.estado === 'ARCHIVADO' ? 'badge--secondary' 
-        : 'badge--primary'
-        
+        : prestamo.estado === 'PAGADO' ? 'badge--success'
+          : prestamo.estado === 'ARCHIVADO' ? 'badge--secondary'
+            : 'badge--primary'
+
       // Obtener nombre del cliente
       let nombreCliente = 'Cargando...'
       if (prestamo.clientes && prestamo.clientes.nombre) {
-          nombreCliente = prestamo.clientes.nombre
+        nombreCliente = prestamo.clientes.nombre
       } else {
-          const c = clientes.list.find(c => c.id === prestamo.cliente_id)
-          if (c) nombreCliente = c.nombre
+        const c = clientes.list.find(c => c.id === prestamo.cliente_id)
+        if (c) nombreCliente = c.nombre
       }
 
       // Iniciales para el avatar del préstamo (del cliente)
@@ -213,7 +282,7 @@ export const initPrestamosController = (dom, store, appCtrl) => {
         .substring(0, 2)
 
       // Formatear moneda
-      const montoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(prestamo.monto_original)
+      const montoFmt = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' }).format(prestamo.monto_original)
       const frecuenciaFmt = prestamo.frecuencia_pago ? prestamo.frecuencia_pago.toLowerCase() : ''
 
       card.innerHTML = `
@@ -288,12 +357,12 @@ export const initPrestamosController = (dom, store, appCtrl) => {
     const detailView = document.getElementById('view-prestamo-detail')
     if (!detailView) return
 
-    const montoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(prestamo.monto_original)
-    const saldoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(prestamo.saldo_pendiente || prestamo.monto_original)
-    
+    const montoFmt = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' }).format(prestamo.monto_original)
+    const saldoFmt = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' }).format(prestamo.saldo_pendiente || prestamo.monto_original)
+
     // Calcular interés total estimado (simplificado para el render)
     const interesEstimado = (prestamo.monto_original * (prestamo.tasa_interes / 100))
-    const interesFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(interesEstimado)
+    const interesFmt = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' }).format(interesEstimado)
 
     detailView.innerHTML = `
       <div class="detail-header">
@@ -344,12 +413,12 @@ export const initPrestamosController = (dom, store, appCtrl) => {
             </tr>
           </thead>
           <tbody>
-            ${cuotas.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding: 20px;">No hay cuotas generadas</td></tr>' : 
-              cuotas.map(c => {
-                const estClass = c.estado === 'PENDIENTE' ? 'badge--warning' : c.estado === 'PAGADA' ? 'badge--success' : 'badge--danger'
-                const cuotaMontoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(c.monto_total)
-                const isPendiente = c.estado === 'PENDIENTE'
-                return `
+            ${cuotas.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding: 20px;">No hay cuotas generadas</td></tr>' :
+        cuotas.map(c => {
+          const estClass = c.estado === 'PENDIENTE' ? 'badge--warning' : c.estado === 'PAGADA' ? 'badge--success' : 'badge--danger'
+          const cuotaMontoFmt = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' }).format(c.monto_total)
+          const isPendiente = c.estado === 'PENDIENTE'
+          return `
                 <tr style="border-bottom: 1px solid var(--color-border-light);">
                   <td style="padding: 12px;">${c.numero_cuota}</td>
                   <td style="padding: 12px;">${c.fecha_vencimiento}</td>
@@ -359,19 +428,19 @@ export const initPrestamosController = (dom, store, appCtrl) => {
                     ${isPendiente ? `<button class="btn btn-sm btn-ghost btn-pagar" data-id="${c.id}">Pagar</button>` : '—'}
                   </td>
                 </tr>`
-              }).join('')}
+        }).join('')}
           </tbody>
         </table>
       </div>
 
-      <div class="detail-actions-bar" style="padding-bottom: 40px;">
+      <div class="detail-actions-bar" style="padding: 24px 16px 40px 16px;">
         <button class="btn btn-primary btn-full" id="btn-amortizacion">Ver Tabla de Amortización</button>
       </div>
     `
 
     // Eventos
     detailView.querySelector('#btn-prestamo-detail-back').onclick = () => appCtrl.showView('prestamos')
-    
+
     // Bind pagar cuotas
     detailView.querySelectorAll('.btn-pagar').forEach(btn => {
       btn.onclick = async (e) => {
@@ -379,16 +448,16 @@ export const initPrestamosController = (dom, store, appCtrl) => {
         if (confirm('¿Desea marcar esta cuota como PAGADA?')) {
           try {
             store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
-            await cuotasDataAdapter.update(cuotaId, { 
+            await cuotasDataAdapter.update(cuotaId, {
               estado: 'PAGADA',
               fecha_pago: new Date().toISOString()
             })
             showSuccess('Pago registrado exitosamente')
-            
+
             // Recargar datos para refrescar la vista
             const nuevasCuotas = await cuotasDataAdapter.getByPrestamo(prestamo.id)
             renderPrestamoDetail(prestamo, nuevasCuotas, nombreCliente)
-            
+
           } catch (err) {
             showError('Error al registrar pago: ' + err.message)
           } finally {
@@ -412,8 +481,8 @@ export const initPrestamosController = (dom, store, appCtrl) => {
     }
     // O si cambiaron clientes (por el select/nombres en tabla)
     if (newState.clientes !== previousState.clientes) {
-        actualizarSelectClientes()
-        render()
+      actualizarSelectClientes()
+      render()
     }
   })
 

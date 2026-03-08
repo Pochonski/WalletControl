@@ -39,7 +39,7 @@ export const initActivosSearchAndMetricsController = (store) => {
     
     // Sumar capital
     const totalValorCosto = activosActivos.reduce((acc, curr) => acc + (Number(curr.costo_compra) * (curr.cantidad || 1)), 0)
-    const costoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', maximumFractionDigits: 0 }).format(totalValorCosto)
+    const costoFmt = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC', maximumFractionDigits: 0 }).format(totalValorCosto)
 
     metricsContainer.innerHTML = `
       <div class="metric-card">
