@@ -26,6 +26,9 @@ export const initClientesController = (dom, store, appCtrl) => {
   const inputBuscar = clientesSection.inputBuscar
   const btnNuevo = clientesSection.btnNuevo
 
+  // ID del cliente que se está editando (null = modo creación)
+  let clienteEditandoId = null
+
   // ────────────────────────────────────────────────────────────────
   // 1. CARGAR clientes al iniciar
   // ────────────────────────────────────────────────────────────────
@@ -51,38 +54,33 @@ export const initClientesController = (dom, store, appCtrl) => {
   // ────────────────────────────────────────────────────────────────
 
   if (formulario) {
+    // Actualizar título del botón según modo
+    const btnSubmit = document.getElementById('btn-submit-cliente')
+
     formulario.addEventListener('submit', async (e) => {
       e.preventDefault()
 
       const formData = new FormData(formulario)
-      const nuevoCliente = Object.fromEntries(formData)
+      const datos = Object.fromEntries(formData)
 
-      // Dispatch local (feedback inmediato)
-      store.dispatch({
-        type: ACTION_TYPES.ADD_CLIENTE,
-        payload: nuevoCliente
-      })
-
-      // Sincronizar con Supabase
       try {
         store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
 
-        const guardado = await clientesDataAdapter.save(nuevoCliente)
-
-        // Si fue temporal, actualizar con ID real
-        if (nuevoCliente.id?.startsWith('temp-')) {
-          store.dispatch({
-            type: ACTION_TYPES.SYNC_REMOTE_ID,
-            payload: {
-              localId: nuevoCliente.id,
-              remoteId: guardado.id,
-              entityType: 'cliente'
-            }
-          })
+        if (clienteEditandoId) {
+          // MODO EDICIÓN
+          const actualizado = await clientesDataAdapter.update(clienteEditandoId, datos)
+          store.dispatch({ type: ACTION_TYPES.UPDATE_CLIENTE, payload: actualizado })
+          showSuccess('Cliente actualizado exitosamente')
+        } else {
+          // MODO CREACIÓN
+          const guardado = await clientesDataAdapter.save(datos)
+          store.dispatch({ type: ACTION_TYPES.ADD_CLIENTE, payload: guardado })
+          showSuccess('Cliente creado exitosamente')
         }
 
-        showSuccess('Cliente creado exitosamente')
+        clienteEditandoId = null
         formulario.reset()
+        if (btnSubmit) btnSubmit.textContent = 'Guardar cliente'
         appCtrl.showView('clientes')
       } catch (err) {
         console.error('[clientesController] Save error:', err)
@@ -126,11 +124,45 @@ export const initClientesController = (dom, store, appCtrl) => {
 
   if (btnNuevo) {
     btnNuevo.addEventListener('click', () => {
-      if (formulario) {
-        formulario.reset()
-        appCtrl.showView('cliente-form')
-      }
+      // Asegurarse de limpiar el modo edición
+      clienteEditandoId = null
+      const btnSubmit = document.getElementById('btn-submit-cliente')
+      if (btnSubmit) btnSubmit.textContent = 'Guardar cliente'
+      if (formulario) formulario.reset()
+      appCtrl.showView('cliente-form')
     })
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // 5. EDITAR cliente — pre-llena el formulario
+  // ────────────────────────────────────────────────────────────────
+
+  const editarCliente = (cliente) => {
+    clienteEditandoId = cliente.id
+
+    // Pre-llenar todos los campos del formulario
+    const setVal = (id, val) => {
+      const el = document.getElementById(id)
+      if (el && val !== null && val !== undefined) el.value = val
+    }
+
+    setVal('cliente-nombre', cliente.nombre)
+    setVal('cliente-cedula', cliente.cedula)
+    setVal('cliente-telefono', cliente.telefono)
+    setVal('cliente-email', cliente.email)
+    setVal('cliente-direccion', cliente.direccion)
+    setVal('cliente-nacimiento', cliente.fecha_nacimiento)
+    setVal('cliente-riesgo', cliente.nivel_riesgo)
+    setVal('cliente-notas', cliente.notas)
+    setVal('cliente-contacto-emergencia', cliente.contacto_emergencia)
+    setVal('cliente-telefono-emergencia', cliente.telefono_emergencia)
+
+    // Actualizar texto del botón de submit
+    const btnSubmit = document.getElementById('btn-submit-cliente')
+    if (btnSubmit) btnSubmit.textContent = 'Actualizar cliente'
+
+    // Navegar al formulario
+    appCtrl.showView('cliente-form')
   }
 
   // ────────────────────────────────────────────────────────────────
@@ -216,12 +248,13 @@ export const initClientesController = (dom, store, appCtrl) => {
         </div>
       `
 
-      // Eventos
+      // Botón Editar
       card.querySelector('.btn-editar').addEventListener('click', (e) => {
         e.stopPropagation()
-        console.log('Editar:', cliente.id)
+        editarCliente(cliente)
       })
 
+      // Botón Archivar
       card.querySelector('.btn-archivar').addEventListener('click', async (e) => {
         e.stopPropagation()
         if (confirm(`¿Archivar cliente "${cliente.nombre}"?`)) {
@@ -231,15 +264,11 @@ export const initClientesController = (dom, store, appCtrl) => {
             store.dispatch({ type: ACTION_TYPES.ARCHIVE_CLIENTE, payload: cliente.id })
             showSuccess('Cliente archivado')
           } catch (err) {
-            showError('Error: ' + err.message)
+            showError('Error al archivar: ' + err.message)
           } finally {
             store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
           }
         }
-      })
-
-      card.addEventListener('click', () => {
-        console.log('Ver detalle:', cliente.id)
       })
 
       fragment.appendChild(card)
