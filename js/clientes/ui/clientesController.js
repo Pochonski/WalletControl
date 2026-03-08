@@ -12,7 +12,7 @@ import { ACTION_TYPES } from '../../app/state/actions.js'
 import { clientesDataAdapter } from '../../adapters/dataAdapters/clientesDataAdapter.js'
 import { showSuccess, showError } from '../../common/uiHelpers.js'
 
-export const initClientesController = (dom, store) => {
+export const initClientesController = (dom, store, appCtrl) => {
   const clientesSection = dom.clientes
   if (!clientesSection) {
     console.warn('[clientesController] DOM clientes section not found')
@@ -83,6 +83,7 @@ export const initClientesController = (dom, store) => {
 
         showSuccess('Cliente creado exitosamente')
         formulario.reset()
+        appCtrl.showView('clientes')
       } catch (err) {
         console.error('[clientesController] Save error:', err)
         showError('Error: ' + err.message)
@@ -138,7 +139,7 @@ export const initClientesController = (dom, store) => {
     btnNuevo.addEventListener('click', () => {
       if (formulario) {
         formulario.reset()
-        formulario.scrollIntoView({ behavior: 'smooth' })
+        appCtrl.showView('cliente-form')
       }
     })
   }
