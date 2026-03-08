@@ -30,74 +30,89 @@ export const initActivosDetailController = (store) => {
     }
 
     // Preparar contenedor
+    const costoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(activo.costo_compra)
+    const precioFmt = activo.precio_venta_esperado ? new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(activo.precio_venta_esperado) : '—'
+    const gananciaEstimada = activo.precio_venta_esperado ? activo.precio_venta_esperado - activo.costo_compra : 0
+    const gananciaFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(gananciaEstimada)
+
     detailContainer.innerHTML = `
-      <div class="view-toolbar">
-        <span class="toolbar-title">Detalle del Activo</span>
-        <div>
-          <button id="btn-edit-activo" class="btn btn-secondary btn-sm">Editar</button>
-          <button id="btn-archive-activo" class="btn btn-danger btn-sm">Archivar</button>
+      <div class="detail-header">
+        <button class="btn-back-circle" id="btn-activo-detail-back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <span class="detail-label">Detalle del Activo</span>
+      </div>
+
+      <div class="detail-profile">
+        <div class="avatar-large" style="background: var(--color-surface-hover); color: var(--color-primary);">
+           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <h2 class="detail-name">${activo.nombre}</h2>
+        <span class="badge ${activo.estado === 'DISPONIBLE' ? 'badge--success' : 'badge--primary'}">
+          ${(activo.estado || 'INVENTARIO').replace('_', ' ')}
+        </span>
+      </div>
+
+      <h3 class="detail-section-title">Resumen Financiero</h3>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <span class="detail-label">Costo de Inversión</span>
+          <span class="detail-value" style="color: var(--color-primary); font-weight: 700;">${costoFmt}</span>
+        </div>
+        <div class="detail-card">
+          <span class="detail-label">Precio Esperado</span>
+          <span class="detail-value">${precioFmt}</span>
+        </div>
+        <div class="detail-card">
+          <span class="detail-label">Ganancia Estimada</span>
+          <span class="detail-value" style="color: var(--color-success); font-weight: 600;">${gananciaFmt}</span>
+        </div>
+        <div class="detail-card">
+          <span class="detail-label">Categoría</span>
+          <span class="detail-value">${activo.categoria.toLowerCase()}</span>
         </div>
       </div>
-      
-      <div class="card detail-card">
-        <div class="detail-header">
-          <h3>${activo.nombre}</h3>
-          <span class="badge ${activo.estado.toLowerCase()}">${activo.estado.replace('_', ' ')}</span>
+
+      <h3 class="detail-section-title">Información Técnica</h3>
+      <div class="detail-list-card" style="margin: 0 16px; background: var(--color-surface); border-radius: 12px; padding: 16px; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+          <span class="detail-label">Número de Serie</span>
+          <span class="detail-value" style="font-size: 0.9rem;">${activo.numero_serie || 'N/A'}</span>
         </div>
-        
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="detail-label">Categoría</span>
-            <span class="detail-value">${activo.categoria}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Costo de compra</span>
-            <span class="detail-value">$${Number(activo.costo_compra).toFixed(2)}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Fecha compra</span>
-            <span class="detail-value">${new Date(activo.fecha_compra).toLocaleDateString()}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Cantidad</span>
-            <span class="detail-value">${activo.cantidad || 1}</span>
-          </div>
-          ${activo.precio_venta_esperado ? `
-          <div class="detail-item">
-            <span class="detail-label">Precio de venta est.</span>
-            <span class="detail-value">$${Number(activo.precio_venta_esperado).toFixed(2)}</span>
-          </div>` : ''}
-          ${activo.proveedor ? `
-          <div class="detail-item">
-            <span class="detail-label">Proveedor</span>
-            <span class="detail-value">${activo.proveedor}</span>
-          </div>` : ''}
-          ${activo.numero_serie ? `
-          <div class="detail-item">
-            <span class="detail-label">N/S</span>
-            <span class="detail-value">${activo.numero_serie}</span>
-          </div>` : ''}
+        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+          <span class="detail-label">Proveedor</span>
+          <span class="detail-value" style="font-size: 0.9rem;">${activo.proveedor || 'No especificado'}</span>
         </div>
-        
-        ${activo.notas ? `
-        <div class="detail-section">
-          <h4>Notas</h4>
-          <p>${activo.notas}</p>
-        </div>` : ''}
-        
-        <div class="detail-section">
-          <h4>Fotos</h4>
-          <div id="activo-fotos-gallery" class="photo-gallery">
-            ${activo.fotos_paths && activo.fotos_paths.length > 0 
-              ? '<span class="loading-text">Cargando fotos...</span>' 
-              : '<span class="empty-text">No hay fotos registradas.</span>'}
-          </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span class="detail-label">Fecha de Compra</span>
+          <span class="detail-value" style="font-size: 0.9rem;">${new Date(activo.fecha_compra).toLocaleDateString()}</span>
         </div>
+      </div>
+
+      ${activo.notas ? `
+      <h3 class="detail-section-title">Notas y Observaciones</h3>
+      <div style="margin: 0 16px; padding: 16px; background: var(--color-surface); border-radius: 12px; font-size: 0.9rem; line-height: 1.5; color: var(--color-text-light);">
+        ${activo.notas}
+      </div>` : ''}
+
+      <h3 class="detail-section-title">Galería de Fotos</h3>
+      <div id="activo-fotos-gallery" class="photo-gallery" style="margin: 0 16px; padding-bottom: 24px;">
+        ${activo.fotos_paths && activo.fotos_paths.length > 0 
+          ? '<div style="padding: 20px; text-align: center; opacity: 0.5;">Cargando imágenes...</div>' 
+          : '<div style="padding: 20px; text-align: center; opacity: 0.5;">No hay fotos registradas</div>'}
+      </div>
+
+      <div class="detail-actions-bar" style="padding-bottom: 40px;">
+        <button class="btn btn-secondary btn-full" id="btn-edit-activo">Editar Activo</button>
+        <button class="btn btn-danger-ghost btn-full" id="btn-archive-activo" style="margin-top: 12px;">Archivar Activo</button>
       </div>
     `
 
     // Mostrar la vista
     showView('activo-detail', store)
+
+    // Eventos de botones
+    document.getElementById('btn-activo-detail-back').onclick = () => showView('activos', store)
 
     // Cargar URLs firmadas de las fotos
     if (activo.fotos_paths && activo.fotos_paths.length > 0) {

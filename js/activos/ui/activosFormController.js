@@ -27,15 +27,17 @@ export const initActivosFormController = (store) => {
         const url = URL.createObjectURL(file)
         const img = document.createElement('img')
         img.src = url
-        // Usar estilos en linea sencillos o una clase CSS (dependiendo del global styles)
-        img.style.width = '80px'
-        img.style.height = '80px'
-        img.style.objectFit = 'cover'
-        img.style.borderRadius = '4px'
-        img.style.marginRight = '8px'
-        img.style.border = '1px solid #ccc'
+        img.className = 'preview-thumb' // Asumiendo que existe o la definimos en styles
+        img.style.cssText = `
+          width: 80px; 
+          height: 80px; 
+          object-fit: cover; 
+          border-radius: 8px; 
+          border: 2px solid var(--color-border-light);
+          box-shadow: var(--shadow-sm);
+        `
         
-        img.onload = () => URL.revokeObjectURL(url) // Liberar memoria
+        img.onload = () => URL.revokeObjectURL(url)
         photoPreview.appendChild(img)
       })
     })
