@@ -41,6 +41,7 @@ export const DOM_IDS = Object.freeze({
   VIEW_ACTIVO_DETAIL:    'view-activo-detail',
   VIEW_ACTIVO_FORM:      'view-activo-form',
   VIEW_COBRANZA:         'view-cobranza',
+  VIEW_COBRANZA_DETAIL:  'view-cobranza-detail',
   VIEW_REPORTES:         'view-reportes',
 
   // ── Auth / Login ─────────────────────────────────────────────────────
@@ -142,9 +143,28 @@ export const DOM_IDS = Object.freeze({
   PREVIEW_FOTOS_ACTIVO:  'preview-fotos-activo',
 
   // ── Cobranza ─────────────────────────────────────────────────────────
-  COBRANZA_HOY:          'cobranza-hoy',
-  COBRANZA_CALENDAR:     'cobranza-calendar',
-  COBRANZA_ALERTS:       'cobranza-alerts',
+  COBRANZAS_SEARCH:         'cobranzas-search',
+  COBRANZAS_FILTER_BAR:     'cobranzas-filter-bar',
+  COBRANZAS_LIST:           'cobranzas-list',
+  COBRANZAS_BTN_REFRESH:    'cobranzas-btn-refresh',
+  FILTRO_ESTADO:           'filtro-estado',
+  FILTRO_ESCALA:           'filtro-escala',
+
+  // ── Cobranza Detail ──────────────────────────────────────────────────
+  COBRANZA_DETAIL_INFO:     'cobranza-detail-info',
+  COBRANZA_DETAIL_ACTIONS:  'cobranza-detail-actions',
+  COBRANZA_ACTIONS_LIST:    'cobranza-actions-list',
+  COBRANZA_BTN_ADD_ACTION:  'cobranza-btn-add-action',
+  COBRANZA_ACTION_FORM:     'cobranza-action-form',
+  COBRANZA_ACTION_FORM_ELEMENT: 'cobranza-action-form-element',
+  COBRANZA_BTN_CANCEL_ACTION: 'cobranza-btn-cancel-action',
+  COBRANZA_BTN_SUBMIT_ACTION: 'cobranza-btn-submit-action',
+  COBRANZA_ACTION_FORM_ERROR: 'cobranza-action-form-error',
+  ACTION_TYPE:              'action-type',
+  ACTION_DESCRIPTION:       'action-description',
+  ACTION_DATE:              'action-date',
+  CONTACT_RESULT:           'contact-result',
+  FOLLOW_UP_DATE:           'follow-up-date',
 
   // ── Reportes ─────────────────────────────────────────────────────────
   REPORTES_SELECTOR:     'reportes-selector',

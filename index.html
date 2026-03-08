@@ -119,7 +119,7 @@
         <!-- ============================================================== -->
         <!-- DASHBOARD                                                       -->
         <!-- ============================================================== -->
-        <section id="view-dashboard" class="view hidden">
+        <section id="view-dashboard" class="view">
           <div id="dashboard-metrics" class="metrics-grid"></div>
           <div id="dashboard-alerts" class="section-block"></div>
           <div id="dashboard-charts" class="section-block"></div>
@@ -129,7 +129,7 @@
         <!-- ============================================================== -->
         <!-- CLIENTES                                                        -->
         <!-- ============================================================== -->
-        <section id="view-clientes" class="view hidden">
+        <section id="view-clientes" class="view">
           <div class="view-toolbar">
             <div class="search-wrapper">
               <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -144,36 +144,36 @@
         </section>
 
         <!-- Detalle cliente (panel completo, se muestra sobre la lista) -->
-        <section id="view-cliente-detail" class="view hidden"></section>
+        <section id="view-cliente-detail" class="view"></section>
 
         <!-- Formulario nuevo/editar cliente -->
-        <section id="view-cliente-form" class="view hidden">
+        <section id="view-cliente-form" class="view">
           <form id="cliente-form" novalidate>
             <div class="form-section">
               <h3 class="form-section-title">Datos personales</h3>
               <div class="form-group">
                 <label for="cliente-nombre">Nombre completo *</label>
-                <input id="cliente-nombre" type="text" placeholder="Juan Pérez" required>
+                <input id="cliente-nombre" name="nombre" type="text" placeholder="Juan Pérez" required>
               </div>
               <div class="form-group">
                 <label for="cliente-cedula">Cédula / Documento *</label>
-                <input id="cliente-cedula" type="text" placeholder="000-0000000-0" required inputmode="numeric">
+                <input id="cliente-cedula" name="cedula" type="text" placeholder="000-0000000-0" required inputmode="numeric">
               </div>
               <div class="form-group">
                 <label for="cliente-telefono">Teléfono</label>
-                <input id="cliente-telefono" type="tel" placeholder="809-555-0000" inputmode="tel">
+                <input id="cliente-telefono" name="telefono" type="tel" placeholder="809-555-0000" inputmode="tel">
               </div>
               <div class="form-group">
                 <label for="cliente-email">Correo electrónico</label>
-                <input id="cliente-email" type="email" placeholder="cliente@ejemplo.com" inputmode="email">
+                <input id="cliente-email" name="email" type="email" placeholder="cliente@ejemplo.com" inputmode="email">
               </div>
               <div class="form-group">
                 <label for="cliente-direccion">Dirección</label>
-                <textarea id="cliente-direccion" rows="2" placeholder="Calle, número, ciudad..."></textarea>
+                <textarea id="cliente-direccion" name="direccion" rows="2" placeholder="Calle, número, ciudad..."></textarea>
               </div>
               <div class="form-group">
                 <label for="cliente-nacimiento">Fecha de nacimiento</label>
-                <input id="cliente-nacimiento" type="date">
+                <input id="cliente-nacimiento" name="fecha_nacimiento" type="date">
               </div>
             </div>
 
@@ -181,11 +181,11 @@
               <h3 class="form-section-title">Contacto alternativo</h3>
               <div class="form-group">
                 <label for="cliente-contacto-emergencia">Contacto de emergencia</label>
-                <input id="cliente-contacto-emergencia" type="text" placeholder="Nombre del contacto">
+                <input id="cliente-contacto-emergencia" name="contacto_emergencia" type="text" placeholder="Nombre del contacto">
               </div>
               <div class="form-group">
                 <label for="cliente-telefono-emergencia">Teléfono de emergencia</label>
-                <input id="cliente-telefono-emergencia" type="tel" inputmode="tel">
+                <input id="cliente-telefono-emergencia" name="telefono_emergencia" type="tel" inputmode="tel">
               </div>
             </div>
 
@@ -193,7 +193,7 @@
               <h3 class="form-section-title">Clasificación</h3>
               <div class="form-group">
                 <label for="cliente-riesgo">Nivel de riesgo</label>
-                <select id="cliente-riesgo">
+                <select id="cliente-riesgo" name="nivel_riesgo">
                   <option value="BAJO">Bajo</option>
                   <option value="MEDIO">Medio</option>
                   <option value="ALTO">Alto</option>
@@ -201,7 +201,7 @@
               </div>
               <div class="form-group">
                 <label for="cliente-notas">Notas internas</label>
-                <textarea id="cliente-notas" rows="3" placeholder="Observaciones sobre el cliente..."></textarea>
+                <textarea id="cliente-notas" name="notas" rows="3" placeholder="Observaciones sobre el cliente..."></textarea>
               </div>
             </div>
 
@@ -237,7 +237,7 @@
         <!-- ============================================================== -->
         <!-- PRESTAMOS                                                       -->
         <!-- ============================================================== -->
-        <section id="view-prestamos" class="view hidden">
+        <section id="view-prestamos" class="view">
           <div class="view-toolbar">
             <div class="search-wrapper">
               <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -251,9 +251,9 @@
           <div id="prestamos-list" class="card-list"></div>
         </section>
 
-        <section id="view-prestamo-detail" class="view hidden"></section>
+        <section id="view-prestamo-detail" class="view"></section>
 
-        <section id="view-prestamo-form" class="view hidden">
+        <section id="view-prestamo-form" class="view">
           <form id="prestamo-form" novalidate>
             <div class="form-section">
               <h3 class="form-section-title">Cliente</h3>
@@ -314,7 +314,7 @@
         <!-- ============================================================== -->
         <!-- PAGOS                                                           -->
         <!-- ============================================================== -->
-        <section id="view-pagos" class="view hidden">
+        <section id="view-pagos" class="view">
           <div class="view-toolbar">
             <span class="toolbar-title">Historial de pagos</span>
             <button id="btn-nuevo-pago" class="btn btn-primary btn-sm" type="button">+ Registrar</button>
@@ -322,7 +322,7 @@
           <div id="pagos-list" class="card-list"></div>
         </section>
 
-        <section id="view-pago-form" class="view hidden">
+        <section id="view-pago-form" class="view">
           <form id="pago-form" novalidate>
             <div class="form-section">
               <h3 class="form-section-title">Cuota a pagar</h3>
@@ -374,7 +374,7 @@
         <!-- ============================================================== -->
         <!-- ACTIVOS                                                         -->
         <!-- ============================================================== -->
-        <section id="view-activos" class="view hidden">
+        <section id="view-activos" class="view">
           <div class="view-toolbar">
             <div class="search-wrapper">
               <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -389,9 +389,9 @@
           <div id="activos-list" class="card-list"></div>
         </section>
 
-        <section id="view-activo-detail" class="view hidden"></section>
+        <section id="view-activo-detail" class="view"></section>
 
-        <section id="view-activo-form" class="view hidden">
+        <section id="view-activo-form" class="view">
           <form id="activo-form" novalidate>
             <div class="form-section">
               <h3 class="form-section-title">Información del activo</h3>
@@ -462,16 +462,114 @@
         <!-- ============================================================== -->
         <!-- COBRANZA                                                        -->
         <!-- ============================================================== -->
-        <section id="view-cobranza" class="view hidden">
-          <div id="cobranza-hoy" class="section-block"></div>
-          <div id="cobranza-calendar" class="section-block"></div>
-          <div id="cobranza-alerts" class="section-block"></div>
+        <section id="view-cobranza" class="view">
+          <div class="view-toolbar">
+            <div class="search-wrapper">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input id="cobranzas-search" type="search" class="search-input" placeholder="Buscar cliente...">
+            </div>
+            <button id="cobranzas-btn-refresh" class="btn btn-secondary btn-sm" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+              </svg>
+            </button>
+          </div>
+
+          <div id="cobranzas-filter-bar" class="filter-bar">
+            <select id="filtro-estado">
+              <option value="">Todos los estados</option>
+              <option value="pending">Pendientes</option>
+              <option value="in_progress">En proceso</option>
+              <option value="contacted">Contactados</option>
+              <option value="negotiated">Negociados</option>
+              <option value="resolved">Resueltos</option>
+              <option value="cancelled">Cancelados</option>
+              <option value="legal">Legal</option>
+            </select>
+            <select id="filtro-escala">
+              <option value="">Todas las escalas</option>
+              <option value="low">Baja</option>
+              <option value="medium">Media</option>
+              <option value="high">Alta</option>
+              <option value="critical">Crítica</option>
+            </select>
+          </div>
+
+          <div id="cobranzas-list" class="card-list"></div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- COBRANZA DETAIL                                                -->
+        <!-- ============================================================== -->
+        <section id="view-cobranza-detail" class="view">
+          <div id="cobranza-detail-info" class="section-block">
+            <!-- Información de la cobranza se carga dinámicamente -->
+          </div>
+
+          <div id="cobranza-detail-actions" class="section-block">
+            <div class="view-toolbar">
+              <h3>Historial de acciones</h3>
+              <button id="cobranza-btn-add-action" class="btn btn-primary btn-sm" type="button">+ Nueva acción</button>
+            </div>
+            <div id="cobranza-actions-list" class="action-list"></div>
+          </div>
+
+          <div id="cobranza-detail-plan" class="section-block hidden">
+            <h3>Plan de pago</h3>
+            <div id="cobranza-plan-content"></div>
+          </div>
+
+          <!-- Formulario para agregar acciones -->
+          <div id="cobranza-action-form" class="form-modal hidden">
+            <form id="cobranza-action-form-element" novalidate>
+              <div class="form-section">
+                <h3 class="form-section-title">Nueva acción de cobranza</h3>
+                <div class="form-group">
+                  <label for="action-type">Tipo de acción *</label>
+                  <select id="action-type" required>
+                    <option value="phone_call">Llamada telefónica</option>
+                    <option value="email">Correo electrónico</option>
+                    <option value="sms">Mensaje SMS</option>
+                    <option value="letter">Carta</option>
+                    <option value="visit">Visita</option>
+                    <option value="payment_plan">Plan de pago</option>
+                    <option value="settlement">Acuerdo</option>
+                    <option value="legal_notice">Notificación legal</option>
+                    <option value="other">Otro</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="action-description">Descripción *</label>
+                  <textarea id="action-description" rows="3" placeholder="Detalles de la acción realizada..." required></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="action-date">Fecha de acción</label>
+                  <input id="action-date" type="datetime-local">
+                </div>
+                <div class="form-group">
+                  <label for="contact-result">Resultado del contacto</label>
+                  <textarea id="contact-result" rows="2" placeholder="Resultado del contacto (opcional)"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="follow-up-date">Fecha de seguimiento</label>
+                  <input id="follow-up-date" type="date">
+                </div>
+              </div>
+              <div id="cobranza-action-form-error" class="form-error hidden" role="alert"></div>
+              <div class="form-actions">
+                <button id="cobranza-btn-cancel-action" type="button" class="btn btn-secondary">Cancelar</button>
+                <button id="cobranza-btn-submit-action" type="submit" class="btn btn-primary">Guardar acción</button>
+              </div>
+            </form>
+          </div>
         </section>
 
         <!-- ============================================================== -->
         <!-- REPORTES                                                        -->
         <!-- ============================================================== -->
-        <section id="view-reportes" class="view hidden">
+        <section id="view-reportes" class="view">
           <div id="reportes-selector" class="section-block"></div>
           <div id="reportes-viewer" class="section-block hidden"></div>
           <div id="reportes-export" class="section-block hidden"></div>

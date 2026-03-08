@@ -1004,6 +1004,285 @@ AND table_type = 'BASE TABLE';
 
 ---
 
+## SECCIÓN 5: COBRANZAS
+## Gestión de cobranzas y acciones de seguimiento
+
+### Tabla: cobranzas
+```sql
+-- Registro principal de cobranzas
+CREATE TABLE cobranzas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  -- Referencias
+  payment_id UUID NOT NULL,  -- ID de la cuota en cuotas table
+  prestamo_id UUID NOT NULL,
+  client_id UUID NOT NULL,
+
+  -- Información financiera
+  amount_due DECIMAL(12,2) NOT NULL CHECK (amount_due > 0),
+  due_date DATE NOT NULL,
+
+  -- Estado y prioridad
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'contacted', 'negotiated', 'resolved', 'cancelled', 'legal')),
+  priority INTEGER DEFAULT 0 CHECK (priority >= 0 AND priority <= 200),
+
+  -- Información adicional
+  notes TEXT,
+  last_contact_date TIMESTAMPTZ,
+  assigned_to UUID REFERENCES auth.users(id), -- Para futuro multi-usuario
+
+  -- Timestamps
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Índices para performance
+CREATE INDEX idx_cobranzas_user_id ON cobranzas(user_id);
+CREATE INDEX idx_cobranzas_status ON cobranzas(status);
+CREATE INDEX idx_cobranzas_payment_id ON cobranzas(payment_id);
+CREATE INDEX idx_cobranzas_priority ON cobranzas(priority DESC);
+CREATE INDEX idx_cobranzas_due_date ON cobranzas(due_date);
+
+-- RLS
+ALTER TABLE cobranzas ENABLE ROW LEVEL SECURITY;
+```
+
+### Tabla: cobranza_actions
+```sql
+-- Historial de acciones de cobranza
+CREATE TABLE cobranza_actions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  collection_id UUID NOT NULL REFERENCES cobranzas(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  -- Tipo de acción
+  action_type TEXT NOT NULL CHECK (action_type IN (
+    'phone_call', 'email', 'sms', 'letter', 'visit',
+    'payment_plan', 'settlement', 'legal_notice', 'other'
+  )),
+
+  -- Detalles de la acción
+  description TEXT NOT NULL,
+  action_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  contact_result TEXT,
+  follow_up_date DATE,
+
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Índices
+CREATE INDEX idx_cobranza_actions_collection_id ON cobranza_actions(collection_id);
+CREATE INDEX idx_cobranza_actions_user_id ON cobranza_actions(user_id);
+CREATE INDEX idx_cobranza_actions_action_date ON cobranza_actions(action_date DESC);
+
+-- RLS
+ALTER TABLE cobranza_actions ENABLE ROW LEVEL SECURITY;
+```
+
+### Tabla: payment_plans
+```sql
+-- Planes de pago negociados
+CREATE TABLE payment_plans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  collection_id UUID NOT NULL REFERENCES cobranzas(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  -- Detalles del plan
+  total_amount DECIMAL(12,2) NOT NULL CHECK (total_amount > 0),
+  installments JSONB NOT NULL, -- Array de cuotas: [{amount, due_date, status}]
+
+  -- Estado
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'cancelled')),
+
+  -- Timestamps
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Índices
+CREATE INDEX idx_payment_plans_collection_id ON payment_plans(collection_id);
+CREATE INDEX idx_payment_plans_user_id ON payment_plans(user_id);
+CREATE INDEX idx_payment_plans_status ON payment_plans(status);
+
+-- RLS
+ALTER TABLE payment_plans ENABLE ROW LEVEL SECURITY;
+```
+
+---
+
+## POLÍTICAS RLS PARA COBRANZAS
+
+### Políticas para cobranzas table
+```sql
+-- SELECT: Solo el propietario ve sus cobranzas
+CREATE POLICY "Users can view own cobranzas" ON cobranzas
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- INSERT: Solo el propietario puede crear cobranzas
+CREATE POLICY "Users can create own cobranzas" ON cobranzas
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- UPDATE: Solo el propietario puede actualizar sus cobranzas
+CREATE POLICY "Users can update own cobranzas" ON cobranzas
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- DELETE: Solo el propietario puede eliminar (soft delete recomendado)
+CREATE POLICY "Users can delete own cobranzas" ON cobranzas
+  FOR DELETE USING (auth.uid() = user_id);
+```
+
+### Políticas para cobranza_actions table
+```sql
+-- SELECT: Solo el propietario ve sus acciones de cobranza
+CREATE POLICY "Users can view own cobranza_actions" ON cobranza_actions
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- INSERT: Solo el propietario puede crear acciones
+CREATE POLICY "Users can create own cobranza_actions" ON cobranza_actions
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- UPDATE: Solo el propietario puede actualizar (poco común)
+CREATE POLICY "Users can update own cobranza_actions" ON cobranza_actions
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- DELETE: No permitir eliminación de historial (auditoría)
+-- CREATE POLICY "No delete cobranza_actions" ON cobranza_actions FOR DELETE USING (false);
+```
+
+### Políticas para payment_plans table
+```sql
+-- SELECT: Solo el propietario ve sus planes de pago
+CREATE POLICY "Users can view own payment_plans" ON payment_plans
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- INSERT: Solo el propietario puede crear planes
+CREATE POLICY "Users can create own payment_plans" ON payment_plans
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- UPDATE: Solo el propietario puede actualizar
+CREATE POLICY "Users can update own payment_plans" ON payment_plans
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- DELETE: Solo el propietario puede eliminar planes cancelados
+CREATE POLICY "Users can delete own payment_plans" ON payment_plans
+  FOR DELETE USING (auth.uid() = user_id);
+```
+
+---
+
+## TRIGGERS PARA COBRANZAS
+
+### Trigger: Actualizar updated_at en cobranzas
+```sql
+CREATE OR REPLACE FUNCTION update_cobranzas_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_cobranzas_updated_at
+  BEFORE UPDATE ON cobranzas
+  FOR EACH ROW EXECUTE FUNCTION update_cobranzas_updated_at();
+```
+
+### Trigger: Actualizar updated_at en payment_plans
+```sql
+CREATE OR REPLACE FUNCTION update_payment_plans_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_payment_plans_updated_at
+  BEFORE UPDATE ON payment_plans
+  FOR EACH ROW EXECUTE FUNCTION update_payment_plans_updated_at();
+```
+
+### Trigger: Auto-crear entradas de auditoría para cobranzas
+```sql
+CREATE OR REPLACE FUNCTION audit_cobranzas_changes()
+RETURNS TRIGGER AS $$
+DECLARE
+  old_data JSONB;
+  new_data JSONB;
+  changes JSONB;
+BEGIN
+  -- Preparar datos para auditoría
+  old_data = to_jsonb(OLD);
+  new_data = to_jsonb(NEW);
+
+  -- Calcular cambios
+  changes = jsonb_object_agg(
+    key,
+    jsonb_build_object('old', old_data->key, 'new', new_data->key)
+  ) FROM jsonb_object_keys(COALESCE(old_data, '{}'::jsonb) || new_data) AS key
+  WHERE old_data->key IS DISTINCT FROM new_data->key;
+
+  -- Insertar en audit_logs
+  INSERT INTO audit_logs (user_id, table_name, record_id, action, old_data, new_data, changes)
+  VALUES (
+    COALESCE(NEW.user_id, OLD.user_id),
+    'cobranzas',
+    COALESCE(NEW.id, OLD.id),
+    CASE
+      WHEN TG_OP = 'INSERT' THEN 'INSERT'
+      WHEN TG_OP = 'UPDATE' THEN 'UPDATE'
+      WHEN TG_OP = 'DELETE' THEN 'DELETE'
+    END,
+    CASE WHEN TG_OP != 'INSERT' THEN old_data ELSE NULL END,
+    CASE WHEN TG_OP != 'DELETE' THEN new_data ELSE NULL END,
+    changes
+  );
+
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_audit_cobranzas
+  AFTER INSERT OR UPDATE OR DELETE ON cobranzas
+  FOR EACH ROW EXECUTE FUNCTION audit_cobranzas_changes();
+```
+
+---
+
+## VERIFICACIÓN POST-SETUP COBRANZAS
+
+### Query de verificación
+```sql
+-- Verificar que las tablas existen y tienen RLS habilitado
+SELECT
+  schemaname,
+  tablename,
+  rowsecurity
+FROM pg_tables
+WHERE tablename IN ('cobranzas', 'cobranza_actions', 'payment_plans')
+AND schemaname = 'public'
+ORDER BY tablename;
+
+-- Verificar políticas RLS
+SELECT
+  schemaname,
+  tablename,
+  policyname,
+  permissive,
+  roles,
+  cmd,
+  qual
+FROM pg_policies
+WHERE tablename IN ('cobranzas', 'cobranza_actions', 'payment_plans')
+ORDER BY tablename, policyname;
+
+-- Resultado esperado: 3 tablas con rowsecurity=true, 9 políticas RLS
+```
+
+---
+
 ## 📝 NOTAS IMPORTANTES
 
 1. **Ejecutar sección por sección** — Si ejecutas todo junto puede haber errores de dependencias

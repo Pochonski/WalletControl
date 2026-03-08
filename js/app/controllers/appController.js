@@ -4,6 +4,8 @@ import { getEl, getEls, show, hide, toggle, setText, showToast } from '../ui/dom
 import { bindEvent, bindEventEl } from '../ui/domEvents.js'
 import { ACTION_TYPES } from '../state/actions.js'
 import { onAuthStateChange, logout } from '../../adapters/supabaseAuth.js'
+import { initSessionManager, clearSession as clearSessionManager } from '../../adapters/sessionManager.js'
+import * as auditLogger from '../../adapters/auditLogger.js'
 
 /**
  * Vistas disponibles y su vista "padre" en el nav.
@@ -23,6 +25,7 @@ const VIEW_NAV_MAP = Object.freeze({
   'activo-detail':   DOM_IDS.NAV_ACTIVOS,
   'activo-form':     DOM_IDS.NAV_ACTIVOS,
   cobranza:          DOM_IDS.NAV_COBRANZA,
+  'cobranza-detail': DOM_IDS.NAV_COBRANZA,
   reportes:          DOM_IDS.NAV_REPORTES,
 })
 
@@ -40,6 +43,7 @@ const VIEW_ID_MAP = Object.freeze({
   'activo-detail':   DOM_IDS.VIEW_ACTIVO_DETAIL,
   'activo-form':     DOM_IDS.VIEW_ACTIVO_FORM,
   cobranza:          DOM_IDS.VIEW_COBRANZA,
+  'cobranza-detail': DOM_IDS.VIEW_COBRANZA_DETAIL,
   reportes:          DOM_IDS.VIEW_REPORTES,
 })
 
@@ -192,6 +196,7 @@ function _updateHeaderTitle(viewName) {
     'activo-detail':   'Detalle activo',
     'activo-form':     'Nuevo activo',
     cobranza:          'Cobranza',
+    'cobranza-detail': 'Detalle cobranza',
     reportes:          'Reportes',
   }
   setText(DOM_IDS.APP_TITLE, titles[viewName] ?? 'Prestamistas')
@@ -203,6 +208,7 @@ function _getParentView(viewName) {
   if (viewName.includes('prestamo')) return 'prestamos'
   if (viewName.includes('pago')) return 'pagos'
   if (viewName.includes('activo')) return 'activos'
+  if (viewName.includes('cobranza')) return 'cobranza'
   return null
 }
 
