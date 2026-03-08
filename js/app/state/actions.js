@@ -20,7 +20,7 @@ export const ACTION_TYPES = Object.freeze({
   LOAD_CLIENTES:        'CLIENTES/LOAD',
   ADD_CLIENTE:          'CLIENTES/ADD',
   UPDATE_CLIENTE:       'CLIENTES/UPDATE',
-  ARCHIVE_CLIENTE:      'CLIENTES/ARCHIVE',
+  DELETE_CLIENTE:       'CLIENTES/DELETE',
 
   // ── Préstamos ────────────────────────────────────────────────────────────
   LOAD_PRESTAMOS:       'PRESTAMOS/LOAD',

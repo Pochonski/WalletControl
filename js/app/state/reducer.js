@@ -117,16 +117,12 @@ export function reducer(state = initialState, action) {
         },
       }
 
-    case ACTION_TYPES.ARCHIVE_CLIENTE:
+    case ACTION_TYPES.DELETE_CLIENTE:
       return {
         ...state,
         clientes: {
           ...state.clientes,
-          list: state.clientes.list.map(c =>
-            c.id === action.payload
-              ? { ...c, archivado: true, estado: 'ARCHIVADO' }
-              : c
-          ),
+          list: state.clientes.list.filter(c => c.id !== action.payload),
         },
       }
 

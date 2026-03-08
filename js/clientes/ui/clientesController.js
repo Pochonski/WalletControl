@@ -2,7 +2,7 @@
  * ClientesController - Gestión completa de clientes
  *
  * Responsabilidades:
- * - Bind de eventos (crear, editar, buscar, archivar)
+ * - Bind de eventos (crear, editar, buscar, eliminar)
  * - Dispatch de acciones a Redux
  * - Render de tarjetas de clientes
  * - Validación y feedback de usuario
@@ -200,7 +200,139 @@ export const initClientesController = (dom, store, appCtrl) => {
   }
 
   // ────────────────────────────────────────────────────────────────
-  // 6. RENDER de tarjetas
+  // ────────────────────────────────────────────────────────────────
+  // 6. DETALLE de cliente
+  // ────────────────────────────────────────────────────────────────
+
+  const renderClienteDetail = async (cliente) => {
+    const detailContainer = dom.clientes.detalle
+    if (!detailContainer) return
+
+    const riesgoClass = cliente.nivel_riesgo === 'ALTO' ? 'badge--danger'
+      : cliente.nivel_riesgo === 'MEDIO' ? 'badge--warning' : 'badge--success'
+
+    // Iniciales
+    const iniciales = (cliente.nombre || '??')
+      .split(' ')
+      .filter(n => n)
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2)
+
+    // Foto
+    let photoHtml = `<div class="avatar-large">${iniciales}</div>`
+    if (cliente.foto_rostro_path) {
+      try {
+        const photoResult = await fileManager.getFileUrl('client-photos', cliente.foto_rostro_path)
+        if (photoResult.success) {
+          photoHtml = `<div class="avatar-large"><img src="${photoResult.url}" alt="${cliente.nombre}"></div>`
+        }
+      } catch (err) {
+        console.warn('Error loading detail photo:', err)
+      }
+    }
+
+    detailContainer.innerHTML = `
+      <div class="detail-header">
+        <button class="btn-back-circle" id="btn-detail-back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <span class="detail-label">Información del Cliente</span>
+      </div>
+
+      <div class="detail-profile">
+        ${photoHtml}
+        <h2 class="detail-name">${cliente.nombre}</h2>
+        <span class="badge ${riesgoClass}">${cliente.nivel_riesgo || 'BAJO'}</span>
+      </div>
+
+      <h3 class="detail-section-title">Datos Principales</h3>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <span class="detail-label">Cédula / Documento</span>
+          <span class="detail-value">${cliente.cedula || 'No registrada'}</span>
+        </div>
+        <div class="detail-card">
+          <span class="detail-label">Teléfono</span>
+          <span class="detail-value">${cliente.telefono || 'No registrado'}</span>
+        </div>
+        <div class="detail-card">
+          <span class="detail-label">Email</span>
+          <span class="detail-value">${cliente.email || 'No registrado'}</span>
+        </div>
+        <div class="detail-card">
+          <span class="detail-label">Fecha de Nacimiento</span>
+          <span class="detail-value">${cliente.fecha_nacimiento || 'No registrada'}</span>
+        </div>
+      </div>
+
+      <h3 class="detail-section-title">Ubicación y Contacto</h3>
+      <div class="detail-grid">
+        <div class="detail-card" style="grid-column: 1 / -1;">
+          <span class="detail-label">Dirección</span>
+          <span class="detail-value">${cliente.direccion || 'No registrada'}</span>
+        </div>
+        <div class="detail-card">
+          <span class="detail-label">Contacto de Emergencia</span>
+          <span class="detail-value">${cliente.contacto_emergencia || 'No registrado'}</span>
+        </div>
+        <div class="detail-card">
+          <span class="detail-label">Teléfono de Emergencia</span>
+          <span class="detail-value">${cliente.telefono_emergencia || 'No registrado'}</span>
+        </div>
+      </div>
+
+      <h3 class="detail-section-title">Información Adicional</h3>
+      <div class="detail-grid" style="padding-bottom: 120px;">
+        <div class="detail-card" style="grid-column: 1 / -1;">
+          <span class="detail-label">Notas Internas</span>
+          <span class="detail-value">${cliente.notas || 'Sin observaciones'}</span>
+        </div>
+      </div>
+
+      <div class="detail-actions-bar">
+        <button class="btn btn-secondary" id="btn-detail-editar">Editar perfil</button>
+        <button class="btn btn-danger" id="btn-detail-eliminar">Eliminar cliente</button>
+      </div>
+    `
+
+    // Eventos
+    detailContainer.querySelector('#btn-detail-back').onclick = () => appCtrl.showView('clientes')
+    
+    detailContainer.querySelector('#btn-detail-editar').onclick = () => {
+      editarCliente(cliente)
+    }
+
+    const btnEliminar = detailContainer.querySelector('#btn-detail-eliminar')
+    if (btnEliminar) {
+      btnEliminar.addEventListener('click', async () => {
+        console.log('[clientesController] Deleting from detail view, ID:', cliente.id)
+        if (confirm(`¿Estás seguro de que deseas eliminar permanentemente a "${cliente.nombre}"? Esta acción no se puede deshacer.`)) {
+          try {
+            store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
+            const res = await clientesDataAdapter.delete(cliente.id)
+            console.log('[clientesController] Delete SUCCESS in adapter:', res)
+            
+            store.dispatch({ type: ACTION_TYPES.DELETE_CLIENTE, payload: cliente.id })
+            showSuccess('Cliente eliminado correctamente')
+            appCtrl.showView('clientes')
+          } catch (err) {
+            console.error('[clientesController] Delete ERROR in detail view:', err)
+            showError('Error: ' + err.message)
+          } finally {
+            store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
+          }
+        }
+      })
+    }
+
+    appCtrl.showView('cliente-detail')
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // 7. RENDER de tarjetas
+
   // ────────────────────────────────────────────────────────────────
 
   const render = async () => {
@@ -275,7 +407,7 @@ export const initClientesController = (dom, store, appCtrl) => {
              <button class="btn-icon btn-editar" title="Editar">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
              </button>
-             <button class="btn-icon btn-archivar" title="Archivar" style="color: var(--color-danger);">
+             <button class="btn-icon btn-eliminar" title="Eliminar" style="color: var(--color-danger);">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
              </button>
           </div>
@@ -284,25 +416,39 @@ export const initClientesController = (dom, store, appCtrl) => {
 
       // Botón Editar
       card.querySelector('.btn-editar').addEventListener('click', (e) => {
+        e.preventDefault()
         e.stopPropagation()
         editarCliente(cliente)
       })
 
-      // Botón Archivar
-      card.querySelector('.btn-archivar').addEventListener('click', async (e) => {
-        e.stopPropagation()
-        if (confirm(`¿Archivar cliente "${cliente.nombre}"?`)) {
-          try {
-            store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
-            await clientesDataAdapter.archive(cliente.id)
-            store.dispatch({ type: ACTION_TYPES.ARCHIVE_CLIENTE, payload: cliente.id })
-            showSuccess('Cliente archivado')
-          } catch (err) {
-            showError('Error al archivar: ' + err.message)
-          } finally {
-            store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
+      // Botón Eliminar
+      const btnEliminarList = card.querySelector('.btn-eliminar')
+      if (btnEliminarList) {
+        btnEliminarList.addEventListener('click', async (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          console.log('[clientesController] Deleting from list card, ID:', cliente.id)
+          
+          if (confirm(`¿Estás seguro de que deseas eliminar permanentemente a "${cliente.nombre}"?`)) {
+            try {
+              store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
+              const res = await clientesDataAdapter.delete(cliente.id)
+              console.log('[clientesController] Delete SUCCESS in adapter:', res)
+              
+              store.dispatch({ type: ACTION_TYPES.DELETE_CLIENTE, payload: cliente.id })
+              showSuccess('Cliente eliminado correctamente')
+            } catch (err) {
+              console.error('[clientesController] Delete ERROR in list view:', err)
+              showError('Error al eliminar: ' + err.message)
+            } finally {
+              store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
+            }
           }
-        }
+        })
+      }
+
+      card.addEventListener('click', () => {
+        renderClienteDetail(cliente)
       })
 
       fragment.appendChild(card)
@@ -312,7 +458,8 @@ export const initClientesController = (dom, store, appCtrl) => {
   }
 
   // ────────────────────────────────────────────────────────────────
-  // 7. SUSCRIBIR a cambios del estado
+  // 8. SUSCRIBIR a cambios del estado
+
   // ────────────────────────────────────────────────────────────────
 
   store.subscribe((newState, previousState) => {
@@ -323,7 +470,8 @@ export const initClientesController = (dom, store, appCtrl) => {
   })
 
   // ────────────────────────────────────────────────────────────────
-  // 8. RENDER INICIAL
+  // 9. RENDER INICIAL
+
   // ────────────────────────────────────────────────────────────────
 
   cargarClientes()
