@@ -165,6 +165,14 @@ h3 { font-size: 0.9375rem; }
   padding-bottom: var(--space-4);
 }
 
+/* Cuando la vista tiene una toolbar sticky interna, el card-list
+   necesita empezar debajo para no quedar tapado */
+.view-toolbar + .filter-bar + .card-list,
+.view-toolbar + .card-list {
+  padding-top: 0;
+  /* La toolbar ya está en flujo normal, el scroll la ocultará */
+}
+
 .view.active {
   display: block;
 }
@@ -664,9 +672,7 @@ h3 { font-size: 0.9375rem; }
   padding: var(--space-3) var(--space-4);
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  position: sticky;
-  top: var(--header-height);
-  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .toolbar-title {
