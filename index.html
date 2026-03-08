@@ -153,27 +153,27 @@
               <h3 class="form-section-title">Datos personales</h3>
               <div class="form-group">
                 <label for="cliente-nombre">Nombre completo *</label>
-                <input id="cliente-nombre" type="text" placeholder="Juan Pérez" required>
+                <input id="cliente-nombre" name="nombre" type="text" placeholder="Juan Pérez" required>
               </div>
               <div class="form-group">
                 <label for="cliente-cedula">Cédula / Documento *</label>
-                <input id="cliente-cedula" type="text" placeholder="000-0000000-0" required inputmode="numeric">
+                <input id="cliente-cedula" name="cedula" type="text" placeholder="000-0000000-0" required inputmode="numeric">
               </div>
               <div class="form-group">
                 <label for="cliente-telefono">Teléfono</label>
-                <input id="cliente-telefono" type="tel" placeholder="809-555-0000" inputmode="tel">
+                <input id="cliente-telefono" name="telefono" type="tel" placeholder="809-555-0000" inputmode="tel">
               </div>
               <div class="form-group">
                 <label for="cliente-email">Correo electrónico</label>
-                <input id="cliente-email" type="email" placeholder="cliente@ejemplo.com" inputmode="email">
+                <input id="cliente-email" name="email" type="email" placeholder="cliente@ejemplo.com" inputmode="email">
               </div>
               <div class="form-group">
                 <label for="cliente-direccion">Dirección</label>
-                <textarea id="cliente-direccion" rows="2" placeholder="Calle, número, ciudad..."></textarea>
+                <textarea id="cliente-direccion" name="direccion" rows="2" placeholder="Calle, número, ciudad..."></textarea>
               </div>
               <div class="form-group">
                 <label for="cliente-nacimiento">Fecha de nacimiento</label>
-                <input id="cliente-nacimiento" type="date">
+                <input id="cliente-nacimiento" name="fecha_nacimiento" type="date">
               </div>
             </div>
 
@@ -181,11 +181,11 @@
               <h3 class="form-section-title">Contacto alternativo</h3>
               <div class="form-group">
                 <label for="cliente-contacto-emergencia">Contacto de emergencia</label>
-                <input id="cliente-contacto-emergencia" type="text" placeholder="Nombre del contacto">
+                <input id="cliente-contacto-emergencia" name="contacto_emergencia" type="text" placeholder="Nombre del contacto">
               </div>
               <div class="form-group">
                 <label for="cliente-telefono-emergencia">Teléfono de emergencia</label>
-                <input id="cliente-telefono-emergencia" type="tel" inputmode="tel">
+                <input id="cliente-telefono-emergencia" name="telefono_emergencia" type="tel" inputmode="tel">
               </div>
             </div>
 
@@ -193,15 +193,15 @@
               <h3 class="form-section-title">Clasificación</h3>
               <div class="form-group">
                 <label for="cliente-riesgo">Nivel de riesgo</label>
-                <select id="cliente-riesgo">
-                  <option value="BAJO">Bajo</option>
-                  <option value="MEDIO">Medio</option>
-                  <option value="ALTO">Alto</option>
+                <select id="cliente-riesgo" name="nivel_riesgo">
+                  <option value="LOW">Bajo</option>
+                  <option value="MEDIUM">Medio</option>
+                  <option value="HIGH">Alto</option>
                 </select>
               </div>
               <div class="form-group">
                 <label for="cliente-notas">Notas internas</label>
-                <textarea id="cliente-notas" rows="3" placeholder="Observaciones sobre el cliente..."></textarea>
+                <textarea id="cliente-notas" name="notas" rows="3" placeholder="Observaciones sobre el cliente..."></textarea>
               </div>
             </div>
 
