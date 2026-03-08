@@ -259,7 +259,7 @@
               <h3 class="form-section-title">Cliente</h3>
               <div class="form-group">
                 <label for="prestamo-cliente-id">Cliente *</label>
-                <select id="prestamo-cliente-id" required>
+                <select id="prestamo-cliente-id" name="cliente_id" required>
                   <option value="">Seleccionar cliente...</option>
                 </select>
               </div>
@@ -268,15 +268,15 @@
               <h3 class="form-section-title">Condiciones del préstamo</h3>
               <div class="form-group">
                 <label for="prestamo-monto">Monto a prestar *</label>
-                <input id="prestamo-monto" type="number" min="1" step="0.01" placeholder="0.00" required inputmode="decimal">
+                <input id="prestamo-monto" name="monto" type="number" min="1" step="0.01" placeholder="0.00" required inputmode="decimal">
               </div>
               <div class="form-group">
                 <label for="prestamo-tasa">Tasa de interés mensual (%) *</label>
-                <input id="prestamo-tasa" type="number" min="0" step="0.01" placeholder="10.00" required inputmode="decimal">
+                <input id="prestamo-tasa" name="tasa" type="number" min="0" step="0.01" placeholder="10.00" required inputmode="decimal">
               </div>
               <div class="form-group">
                 <label for="prestamo-tipo">Tipo de interés *</label>
-                <select id="prestamo-tipo" required>
+                <select id="prestamo-tipo" name="tipo" required>
                   <option value="SIMPLE">Simple (interés fijo sobre capital)</option>
                   <option value="COMPUESTO">Compuesto (anualidad)</option>
                   <option value="MIXTO">Mixto (sobre saldo insoluto)</option>
@@ -284,7 +284,7 @@
               </div>
               <div class="form-group">
                 <label for="prestamo-frecuencia">Frecuencia de pago *</label>
-                <select id="prestamo-frecuencia" required>
+                <select id="prestamo-frecuencia" name="frecuencia" required>
                   <option value="MENSUAL">Mensual</option>
                   <option value="QUINCENAL">Quincenal</option>
                   <option value="SEMANAL">Semanal</option>
@@ -294,11 +294,11 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="prestamo-fecha-inicio">Fecha inicio *</label>
-                  <input id="prestamo-fecha-inicio" type="date" required>
+                  <input id="prestamo-fecha-inicio" name="fecha_inicio" type="date" required>
                 </div>
                 <div class="form-group">
                   <label for="prestamo-fecha-fin">Fecha fin *</label>
-                  <input id="prestamo-fecha-fin" type="date" required>
+                  <input id="prestamo-fecha-fin" name="fecha_fin" type="date" required>
                 </div>
               </div>
             </div>
@@ -596,6 +596,15 @@
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
           <span>Clientes</span>
+        </button>
+
+        <button id="nav-prestamos" class="nav-item" data-view="prestamos" type="button" aria-label="Préstamos">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="6" width="20" height="12" rx="2"/>
+            <circle cx="12" cy="12" r="2"/>
+            <path d="M6 12h.01M18 12h.01"/>
+          </svg>
+          <span>Préstamos</span>
         </button>
 
         <button id="nav-cobranza" class="nav-item nav-item-fab" data-view="cobranza" type="button" aria-label="Cobros de hoy">
