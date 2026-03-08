@@ -11,9 +11,10 @@
 import { ACTION_TYPES } from '../../app/state/actions.js'
 import { prestamosDataAdapter } from '../../adapters/dataAdapters/prestamosDataAdapter.js'
 import { clientesDataAdapter } from '../../adapters/dataAdapters/clientesDataAdapter.js'
+import { cuotasDataAdapter } from '../../adapters/dataAdapters/cuotasDataAdapter.js'
 import { showSuccess, showError } from '../../common/uiHelpers.js'
 
-export const initPrestamosController = (dom, store) => {
+export const initPrestamosController = (dom, store, appCtrl) => {
   const prestamosSection = dom.prestamos
   if (!prestamosSection) {
     console.warn('[prestamosController] DOM prestamos section not found')
@@ -85,13 +86,19 @@ export const initPrestamosController = (dom, store) => {
     formulario.addEventListener('submit', async (e) => {
       e.preventDefault()
 
-      const formData = new FormData(formulario)
-      const nuevoPrestamo = Object.fromEntries(formData)
+      // Usamos el ID del DOM para estar seguros o name si existiera. 
+      // Como no hay names en el HTML, extraemos manualmente los values.
+      const getVal = (id) => document.getElementById(id)?.value
 
-      // Conversiones de tipo
-      nuevoPrestamo.monto = parseFloat(nuevoPrestamo.monto)
-      nuevoPrestamo.tasa_interes = parseFloat(nuevoPrestamo.tasa_interes)
-      nuevoPrestamo.plazo_meses = parseInt(nuevoPrestamo.plazo_meses, 10)
+      const nuevoPrestamo = {
+        cliente_id: getVal('prestamo-cliente-id'),
+        monto_original: parseFloat(getVal('prestamo-monto')),
+        tasa_interes: parseFloat(getVal('prestamo-tasa')),
+        tipo_interes: getVal('prestamo-tipo'),
+        frecuencia_pago: getVal('prestamo-frecuencia'),
+        fecha_inicio: getVal('prestamo-fecha-inicio'),
+        fecha_fin: getVal('prestamo-fecha-fin')
+      }
 
       // Dispatch local inmediato
       store.dispatch({
@@ -187,13 +194,13 @@ export const initPrestamosController = (dom, store) => {
       }
 
       // Formatear moneda
-      const montoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(prestamo.monto)
+      const montoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(prestamo.monto_original)
 
       row.innerHTML = `
         <td>${nombreCliente}</td>
         <td>${montoFmt}</td>
         <td>${prestamo.tasa_interes}%</td>
-        <td>${prestamo.plazo_meses} meses</td>
+        <td>${prestamo.tipo_interes}</td>
         <td>${prestamo.frecuencia_pago}</td>
         <td><span class="badge ${estadoClass}">${prestamo.estado || 'ACTIVO'}</span></td>
         <td>
@@ -207,10 +214,17 @@ export const initPrestamosController = (dom, store) => {
       const btnArchivar = row.querySelector('.btn-archivar')
 
       if (btnCuotas) {
-        btnCuotas.addEventListener('click', () => {
-          // TODO: Implementar vista de cuotas
-          console.log('Ver cuotas del préstamo:', prestamo.id)
-          showSuccess('Funcionalidad Ver Cuotas en construcción')
+        btnCuotas.addEventListener('click', async () => {
+          try {
+            store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
+            const cuotas = await cuotasDataAdapter.getByPrestamo(prestamo.id)
+            renderPrestamoDetail(prestamo, cuotas, nombreCliente)
+            appCtrl.showView('prestamo-detail')
+          } catch (err) {
+            showError('Error al cargar cuotas: ' + err.message)
+          } finally {
+            store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
+          }
         })
       }
 
@@ -241,7 +255,76 @@ export const initPrestamosController = (dom, store) => {
   }
 
   // ────────────────────────────────────────────────────────────────
-  // 5. SUSCRIBIR a cambios del estado
+  // 5. RENDER DETALLE DE PRÉSTAMO (CUOTAS)
+  // ────────────────────────────────────────────────────────────────
+
+  const renderPrestamoDetail = (prestamo, cuotas, nombreCliente) => {
+    const detailView = document.getElementById('view-prestamo-detail')
+    if (!detailView) return
+
+    const montoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(prestamo.monto_original)
+    const saldoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(prestamo.saldo_pendiente || prestamo.monto_original)
+
+    detailView.innerHTML = `
+      <div class="detail-header">
+        <h2>Préstamo de ${nombreCliente}</h2>
+        <div class="detail-metrics">
+          <div class="metric-card">
+            <span class="metric-label">Monto Original</span>
+            <span class="metric-value">${montoFmt}</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Saldo Pendiente</span>
+            <span class="metric-value">${saldoFmt}</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Estado</span>
+            <span class="metric-value badge ${prestamo.estado === 'ACTIVO' ? 'estado-activo' : ''}">${prestamo.estado}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="detail-body" style="margin-top: 20px;">
+        <h3>Tabla de Cuotas</h3>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>Vencimiento</th>
+                <th>Monto Total</th>
+                <th>Cobrado</th>
+                <th>Saldo</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${cuotas.length === 0 ? '<tr><td colspan="7" style="text-align:center;">No hay cuotas generadas</td></tr>' : 
+                cuotas.map(c => {
+                  const estadoClass = c.estado === 'PENDIENTE' ? 'estado-pendiente' : c.estado === 'PAGADA' ? 'estado-pagado' : 'riesgo-high'
+                  return `
+                  <tr>
+                    <td>${c.numero_cuota}</td>
+                    <td>${c.fecha_vencimiento}</td>
+                    <td>${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(c.monto_total)}</td>
+                    <td>${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(c.monto_pagado)}</td>
+                    <td>${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(c.saldo_pendiente || c.monto_total)}</td>
+                    <td><span class="badge ${estadoClass}">${c.estado}</span></td>
+                    <td>
+                      <button class="btn btn-sm btn-primary" ${c.estado === 'PAGADA' ? 'disabled' : ''}>Pagar</button>
+                    </td>
+                  </tr>`
+                }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // 6. SUSCRIBIR a cambios del estado
   // ────────────────────────────────────────────────────────────────
 
   store.subscribe((newState, previousState) => {

@@ -82,6 +82,22 @@ export const prestamosDataAdapter = {
 
       const resultado = data[0]
 
+      // Generar cuotas llamando a la función RPC de Supabase
+      const { error: rpcError } = await supabaseClient.rpc('crear_cuotas_prestamo', {
+        p_prestamo_id: resultado.id,
+        p_monto_original: resultado.monto_original,
+        p_tasa_interes: resultado.tasa_interes,
+        p_tipo_interes: resultado.tipo_interes,
+        p_fecha_inicio: resultado.fecha_inicio,
+        p_fecha_fin: resultado.fecha_fin,
+        p_frecuencia_pago: resultado.frecuencia_pago
+      })
+
+      if (rpcError) {
+        console.error('[prestamosDataAdapter.save] Error al crear cuotas:', rpcError)
+        throw new Error('El préstamo se creó pero hubo un error al generar las cuotas.')
+      }
+
       // Guardar local
       const actual = localStorageAdapter.get('prestamos') || []
       localStorageAdapter.set('prestamos', [resultado, ...actual])
@@ -89,7 +105,7 @@ export const prestamosDataAdapter = {
       // Auditoría
       await auditAdapter.log('INSERT', 'prestamo', resultado.id, {
         cliente_id: resultado.cliente_id,
-        monto: resultado.monto
+        monto_original: resultado.monto_original
       })
 
       return resultado

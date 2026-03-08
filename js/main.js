@@ -43,4 +43,4 @@ const domContext = {
 
 // Inicializar controladores de dominio
 initClientesController(domContext, store)
-initPrestamosController(domContext, store)
+initPrestamosController(domContext, store, appCtrl)
