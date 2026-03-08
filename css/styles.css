@@ -1188,3 +1188,32 @@ h3 { font-size: 0.9375rem; }
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+/* --------------------------------------------------------------------------
+   27. ACCIONES DE TARJETAS (Editar, Archivar)
+   -------------------------------------------------------------------------- */
+.card-right {
+  min-width: 60px;
+}
+
+.card-right .badge {
+  margin-bottom: var(--space-2);
+}
+
+.card .btn-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  padding: 4px;
+}
+
+/* Estado pendiente */
+.badge--pendiente { background: var(--color-warning-light); color: var(--color-warning-text); }
+
+/* Fix: asegurar que estados de préstamos usen clases correctas */
+.estado-activo    { background: var(--color-success-light); color: var(--color-success-text); }
+.estado-pagado    { background: var(--color-primary-light); color: var(--color-primary-text); }
+.estado-pendiente { background: var(--color-warning-light); color: var(--color-warning-text); }
+.estado-archivado { background: var(--color-surface-2);     color: var(--color-text-muted);  }
+.riesgo-high      { background: var(--color-danger-light);  color: var(--color-danger-text); }
+
