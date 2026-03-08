@@ -14,14 +14,17 @@ import { store } from './app/state/store.js'
 import { initAppController } from './app/controllers/appController.js'
 import { initLoginController } from './auth/ui/loginController.js'
 import { initClientesController } from './clientes/ui/clientesController.js'
+import { initPrestamosController } from './prestamos/ui/prestamosController.js'
 import { DOM_IDS } from './app/ui/domIds.js'
 import { getEl } from './app/ui/domAdapter.js'
 
-// Inicializar orquestadores principales
+// Inicializar orquestador de vistas y autenticación
 const appCtrl = initAppController(store)
-initLoginController(store)
 
-// Construir objeto DOM para inyectar dependencias UI
+// Inicializar vista de login
+initLoginController(store, appCtrl)
+
+// Recopilar elementos DOM para inicializar controladores de dominio
 const domContext = {
   clientes: {
     section: getEl(DOM_IDS.VIEW_CLIENTES),
@@ -30,8 +33,15 @@ const domContext = {
     inputBuscar: getEl(DOM_IDS.CLIENTES_SEARCH),
     btnNuevo: getEl(DOM_IDS.BTN_NUEVO_CLIENTE),
     detalle: getEl(DOM_IDS.VIEW_CLIENTE_DETAIL)
+  },
+  prestamos: {
+    form: getEl(DOM_IDS.PRESTAMO_FORM),
+    tabla: getEl(DOM_IDS.PRESTAMOS_LIST),
+    selectCliente: getEl(DOM_IDS.PRESTAMO_CLIENTE_ID),
+    btnNuevo: getEl(DOM_IDS.BTN_NUEVO_PRESTAMO)
   }
 }
 
 // Inicializar controladores de dominio
 initClientesController(domContext, store, appCtrl)
+initPrestamosController(domContext, store, appCtrl)
