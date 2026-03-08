@@ -39,7 +39,7 @@ export const validateCliente = (data) => {
   }
 
   // Nivel de riesgo (si existe)
-  if (data.nivel_riesgo && !['LOW', 'MEDIUM', 'HIGH'].includes(data.nivel_riesgo)) {
+  if (data.nivel_riesgo && !['BAJO', 'MEDIO', 'ALTO'].includes(data.nivel_riesgo)) {
     errors.push('Nivel de riesgo inválido')
   }
 
@@ -65,7 +65,7 @@ export const validateClienteUpdate = (data) => {
     errors.push('Teléfono inválido')
   }
 
-  if (data.nivel_riesgo !== undefined && !['LOW', 'MEDIUM', 'HIGH'].includes(data.nivel_riesgo)) {
+  if (data.nivel_riesgo !== undefined && !['BAJO', 'MEDIO', 'ALTO'].includes(data.nivel_riesgo)) {
     errors.push('Nivel de riesgo inválido')
   }
 
