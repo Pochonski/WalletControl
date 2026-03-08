@@ -1,0 +1,7 @@
+[     712ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/favicon.ico:0
+[     723ms] [ERROR] [clientesDataAdapter.load] No autorizado @ http://localhost:3000/js/adapters/dataAdapters/clientesDataAdapter.js?t=1772954122906:44
+[    4554ms] [ERROR] [prestamosDataAdapter.load] No autorizado @ http://localhost:3000/js/adapters/dataAdapters/prestamosDataAdapter.js?t=1772954122906:42
+[   13394ms] [ERROR] [clientesDataAdapter.load] No autorizado @ http://localhost:3000/js/adapters/dataAdapters/clientesDataAdapter.js?t=1772954171942:44
+[   13394ms] [ERROR] [prestamosDataAdapter.load] No autorizado @ http://localhost:3000/js/adapters/dataAdapters/prestamosDataAdapter.js?t=1772954171857:42
+[   13395ms] [ERROR] [cobranzasDataAdapter.loadOverduePayments] No autorizado @ http://localhost:3000/js/adapters/cobranzasDataAdapter.js?t=1772954171932:72
+[   13395ms] [ERROR] [cobranzasDataAdapter.loadActiveCollections] No autorizado @ http://localhost:3000/js/adapters/cobranzasDataAdapter.js?t=1772954171932:126

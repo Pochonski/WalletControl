@@ -53,7 +53,7 @@ export const initActivosTableController = (store) => {
       card.dataset.id = activo.id
       
       const categoryIcon = icons[activo.categoria] || icons['OTRO']
-      const costoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(activo.costo_compra)
+      const costoFmt = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' }).format(activo.costo_compra)
       
       card.innerHTML = `
         <div class="card-avatar" style="background: var(--color-surface-hover); color: var(--color-primary);">

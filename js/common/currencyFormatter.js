@@ -3,15 +3,15 @@
  * Funciones puras, sin DOM ni side effects.
  */
 
-const DEFAULT_LOCALE   = 'es-DO'  // Español República Dominicana
-const DEFAULT_CURRENCY = 'DOP'    // Peso dominicano
+const DEFAULT_LOCALE = 'es-CR'  // Español Costa Rica
+const DEFAULT_CURRENCY = 'CRC'    // Colón costarricense
 
 /**
  * Formatea un número como moneda.
  * @param {number} amount
  * @param {string} [currency=DEFAULT_CURRENCY]
  * @param {string} [locale=DEFAULT_LOCALE]
- * @returns {string}  Ej: 'RD$ 12,500.00'
+ * @returns {string}  Ej: ' 12,500.00'
  */
 export function formatCurrency(amount, currency = DEFAULT_CURRENCY, locale = DEFAULT_LOCALE) {
   if (amount == null || isNaN(amount)) return '—'
@@ -27,7 +27,7 @@ export function formatCurrency(amount, currency = DEFAULT_CURRENCY, locale = DEF
  * Formatea un número como moneda compacta (sin decimales si es entero).
  * @param {number} amount
  * @param {string} [currency=DEFAULT_CURRENCY]
- * @returns {string}  Ej: 'RD$ 12,500'
+ * @returns {string}  Ej: ' 12,500'
  */
 export function formatCurrencyCompact(amount, currency = DEFAULT_CURRENCY) {
   if (amount == null || isNaN(amount)) return '—'
@@ -83,13 +83,13 @@ export function formatPercent(value) {
 /**
  * Formatea un monto en forma abreviada (K, M).
  * @param {number} amount
- * @returns {string}  Ej: 'RD$ 1.2M' | 'RD$ 50K'
+ * @returns {string}  Ej: ' 1.2M' | ' 50K'
  */
 export function formatCurrencyAbbrev(amount) {
   if (amount == null || isNaN(amount)) return '—'
   const abs = Math.abs(amount)
   const sign = amount < 0 ? '-' : ''
-  if (abs >= 1_000_000) return `${sign}RD$ ${(abs / 1_000_000).toFixed(1)}M`
-  if (abs >= 1_000)     return `${sign}RD$ ${(abs / 1_000).toFixed(1)}K`
+  if (abs >= 1_000_000) return `${sign}₡ ${(abs / 1_000_000).toFixed(1)}M`
+  if (abs >= 1_000) return `${sign}₡ ${(abs / 1_000).toFixed(1)}K`
   return formatCurrency(amount)
 }

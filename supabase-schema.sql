@@ -676,36 +676,53 @@ DECLARE
   v_numero_cuota INTEGER := 1;
   v_monto_cuota DECIMAL;
   v_interes_cuota DECIMAL;
-  v_dias_totales INTEGER;
-  v_interes_diario DECIMAL;
+  v_dias_intervalo INTEGER;
 BEGIN
-  -- Calcular cantidad de días
-  v_dias_totales := (p_fecha_fin - p_fecha_inicio);
-  v_interes_diario := (p_tasa_interes / 100) / 30; -- aproximado
+  -- Determinar intervalo en días según frecuencia
+  v_dias_intervalo := CASE p_frecuencia_pago
+    WHEN 'DIARIO' THEN 1
+    WHEN 'INTERDIARIO' THEN 2
+    WHEN 'SEMANAL' THEN 7
+    WHEN 'BISEMANAL' THEN 14
+    WHEN 'QUINCENAL' THEN 15
+    WHEN '15_Y_FIN_MES' THEN 15
+    WHEN 'MENSUAL' THEN 30
+    WHEN 'ANUAL' THEN 365
+    ELSE 30
+  END;
 
-  -- Determinar intervalo según frecuencia
+  -- Determinar intervalo inicial (primer pago)
   v_fecha_cuota := p_fecha_inicio;
 
   WHILE v_fecha_cuota <= p_fecha_fin LOOP
-    -- Calcular interés para esta cuota
+    -- Calcular interés para esta cuota según tipo de amortización
     CASE p_tipo_interes
-      WHEN 'SIMPLE' THEN
-        v_interes_cuota := (p_monto_original * p_tasa_interes / 100) / 
-                          (EXTRACT(DAY FROM (p_fecha_fin - p_fecha_inicio)) / 30);
-      WHEN 'COMPUESTO' THEN
-        v_interes_cuota := (p_monto_original * ((1 + p_tasa_interes/100) ^ (1/12) - 1));
-      ELSE -- MIXTO
-        v_interes_cuota := (p_monto_original * p_tasa_interes / 100) / 12;
+      WHEN 'CUOTA_FIJA' THEN
+        v_interes_cuota := (p_monto_original * (p_tasa_interes / 100)) / (30 / v_dias_intervalo);
+      WHEN 'INTERES_FIJO' THEN
+        v_interes_cuota := (p_monto_original * (p_tasa_interes / 100));
+      WHEN 'DISMINUIR_CUOTA' THEN 
+        -- Simulación simple de interés sobre saldo insoluto
+        v_interes_cuota := (p_monto_original * (p_tasa_interes / 100));
+      WHEN 'CAPITAL_AL_FINAL' THEN
+        v_interes_cuota := (p_monto_original * (p_tasa_interes / 100));
+      ELSE
+        v_interes_cuota := (p_monto_original * p_tasa_interes / 100) / (30 / v_dias_intervalo);
     END CASE;
 
+    -- Cálculo del monto total de la cuota
     v_monto_cuota := (p_monto_original / 
-                      (EXTRACT(DAY FROM (p_fecha_fin - p_fecha_inicio)) / 
-                       CASE p_frecuencia_pago
-                         WHEN 'DIARIA' THEN 1
-                         WHEN 'SEMANAL' THEN 7
-                         WHEN 'QUINCENAL' THEN 15
-                         WHEN 'MENSUAL' THEN 30
-                       END)) + v_interes_cuota;
+                      (EXTRACT(DAY FROM (p_fecha_fin - p_fecha_inicio)) / v_dias_intervalo)) + v_interes_cuota;
+
+    -- Si es CAPITAL_AL_FINAL, las cuotas intermedias solo pagan interés. La última paga el capital.
+    IF p_tipo_interes = 'CAPITAL_AL_FINAL' THEN
+       IF (v_fecha_cuota + v_dias_intervalo) > p_fecha_fin THEN
+         -- Última cuota
+         v_monto_cuota := p_monto_original + v_interes_cuota;
+       ELSE
+         v_monto_cuota := v_interes_cuota;
+       END IF;
+    END IF;
 
     -- Insertar cuota
     INSERT INTO cuotas (
@@ -726,13 +743,8 @@ BEGIN
       v_monto_cuota
     );
 
-    -- Incrementar fecha según frecuencia
-    v_fecha_cuota := CASE p_frecuencia_pago
-      WHEN 'DIARIA' THEN v_fecha_cuota + INTERVAL '1 day'
-      WHEN 'SEMANAL' THEN v_fecha_cuota + INTERVAL '7 days'
-      WHEN 'QUINCENAL' THEN v_fecha_cuota + INTERVAL '15 days'
-      WHEN 'MENSUAL' THEN v_fecha_cuota + INTERVAL '1 month'
-    END;
+    -- Incrementar fecha (evita loops infinitos en 15_Y_FIN_MES simple)
+    v_fecha_cuota := v_fecha_cuota + v_dias_intervalo::INTEGER;
 
     v_numero_cuota := v_numero_cuota + 1;
   END LOOP;

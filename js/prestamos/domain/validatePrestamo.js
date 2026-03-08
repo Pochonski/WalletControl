@@ -13,29 +13,29 @@ export const validatePrestamo = (prestamo) => {
   if (!prestamo.frecuencia_pago) errors.push('La frecuencia de pago es requerida')
   if (!prestamo.fecha_inicio) errors.push('La fecha de inicio es requerida')
   if (!prestamo.fecha_fin) errors.push('La fecha fin es requerida')
-  
-  const frecuenciasValidas = ['DIARIA', 'SEMANAL', 'QUINCENAL', 'MENSUAL']
+
+  const frecuenciasValidas = ['DIARIO', 'INTERDIARIO', 'SEMANAL', 'BISEMANAL', 'QUINCENAL', '15_Y_FIN_MES', 'MENSUAL', 'ANUAL']
   if (prestamo.frecuencia_pago && !frecuenciasValidas.includes(prestamo.frecuencia_pago.toUpperCase())) {
-      errors.push(`Frecuencia inválida. Debe ser una de: ${frecuenciasValidas.join(', ')}`)
+    errors.push(`Frecuencia inválida. Debe ser una de: ${frecuenciasValidas.join(', ')}`)
   }
 
-  const tiposValidos = ['SIMPLE', 'COMPUESTO', 'MIXTO']
+  const tiposValidos = ['CUOTA_FIJA', 'DISMINUIR_CUOTA', 'INTERES_FIJO', 'CAPITAL_AL_FINAL']
   if (prestamo.tipo_interes && !tiposValidos.includes(prestamo.tipo_interes.toUpperCase())) {
-      errors.push(`Tipo de interés inválido. Debe ser uno de: ${tiposValidos.join(', ')}`)
+    errors.push(`Tipo de interés (amortización) inválido. Debe ser uno de: ${tiposValidos.join(', ')}`)
   }
 
   if (prestamo.fecha_inicio && isNaN(new Date(prestamo.fecha_inicio).getTime())) {
-      errors.push('Fecha de inicio inválida')
+    errors.push('Fecha de inicio inválida')
   }
 
   if (prestamo.fecha_fin && isNaN(new Date(prestamo.fecha_fin).getTime())) {
-      errors.push('Fecha fin inválida')
+    errors.push('Fecha fin inválida')
   }
 
   if (prestamo.fecha_inicio && prestamo.fecha_fin) {
-      if (new Date(prestamo.fecha_fin) <= new Date(prestamo.fecha_inicio)) {
-          errors.push('La fecha fin debe ser posterior a la fecha de inicio')
-      }
+    if (new Date(prestamo.fecha_fin) <= new Date(prestamo.fecha_inicio)) {
+      errors.push('La fecha fin debe ser posterior a la fecha de inicio')
+    }
   }
 
   return {
@@ -52,7 +52,7 @@ export const validatePrestamoUpdate = (cambios) => {
 
   const estadosValidos = ['ACTIVO', 'COMPLETADO', 'ARCHIVADO']
   if (cambios.estado && !estadosValidos.includes(cambios.estado.toUpperCase())) {
-      errors.push(`Estado del préstamo inválido. Debe ser uno de: ${estadosValidos.join(', ')}`)
+    errors.push(`Estado del préstamo inválido. Debe ser uno de: ${estadosValidos.join(', ')}`)
   }
 
   return {

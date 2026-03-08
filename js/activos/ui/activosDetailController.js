@@ -30,10 +30,10 @@ export const initActivosDetailController = (store) => {
     }
 
     // Preparar contenedor
-    const costoFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(activo.costo_compra)
-    const precioFmt = activo.precio_venta_esperado ? new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(activo.precio_venta_esperado) : '—'
+    const costoFmt = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' }).format(activo.costo_compra)
+    const precioFmt = activo.precio_venta_esperado ? new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' }).format(activo.precio_venta_esperado) : '—'
     const gananciaEstimada = activo.precio_venta_esperado ? activo.precio_venta_esperado - activo.costo_compra : 0
-    const gananciaFmt = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(gananciaEstimada)
+    const gananciaFmt = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' }).format(gananciaEstimada)
 
     detailContainer.innerHTML = `
       <div class="detail-header">
