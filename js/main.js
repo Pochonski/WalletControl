@@ -28,7 +28,8 @@ const domContext = {
     form: getEl(DOM_IDS.CLIENTE_FORM),
     tabla: getEl(DOM_IDS.CLIENTES_LIST),
     inputBuscar: getEl(DOM_IDS.CLIENTES_SEARCH),
-    btnNuevo: getEl(DOM_IDS.BTN_NUEVO_CLIENTE)
+    btnNuevo: getEl(DOM_IDS.BTN_NUEVO_CLIENTE),
+    detalle: getEl(DOM_IDS.VIEW_CLIENTE_DETAIL)
   }
 }
 

@@ -171,37 +171,35 @@ export const clientesDataAdapter = {
   },
 
   /**
-   * Archivar cliente
+   * Eliminar cliente definitivamente
    */
-  archive: async (clienteId) => {
+  delete: async (clienteId) => {
     try {
       const { data: { user } } = await supabaseClient.auth.getUser()
       if (!user) throw new Error('No autorizado')
 
       const { data, error } = await supabaseClient
         .from('clientes')
-        .update({ estado: 'ARCHIVADO' })
+        .delete()
         .eq('id', clienteId)
         .eq('user_id', user.id)
         .select()
 
       if (error) throw error
 
-      const archivado = data[0]
-
       // Actualizar local
       const clientes = localStorageAdapter.get('clientes') || []
-      const updated = clientes.map(c => c.id === clienteId ? { ...c, estado: 'ARCHIVADO' } : c)
+      const updated = clientes.filter(c => c.id !== clienteId)
       localStorageAdapter.set('clientes', updated)
 
       // Auditoría
-      await auditAdapter.log('UPDATE', 'cliente', clienteId, {
-        accion: 'archivado'
+      await auditAdapter.log('DELETE', 'cliente', clienteId, {
+        accion: 'eliminado fisico'
       })
 
-      return archivado
+      return data[0]
     } catch (err) {
-      console.error('[clientesDataAdapter.archive]', err.message)
+      console.error('[clientesDataAdapter.delete]', err.message)
       throw err
     }
   },
