@@ -4,6 +4,8 @@ import { getEl, getEls, show, hide, toggle, setText, showToast } from '../ui/dom
 import { bindEvent, bindEventEl } from '../ui/domEvents.js'
 import { ACTION_TYPES } from '../state/actions.js'
 import { onAuthStateChange, logout } from '../../adapters/supabaseAuth.js'
+import { initSessionManager, clearSession as clearSessionManager } from '../../adapters/sessionManager.js'
+import * as auditLogger from '../../adapters/auditLogger.js'
 
 /**
  * Vistas disponibles y su vista "padre" en el nav.

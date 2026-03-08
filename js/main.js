@@ -17,9 +17,12 @@ import { initActivosFormController } from './activos/ui/activosFormController.js
 import { initActivosTableController } from './activos/ui/activosTableController.js'
 import { initActivosDetailController } from './activos/ui/activosDetailController.js'
 import { initActivosSearchAndMetricsController } from './activos/ui/activosSearchMetricsController.js'
+import { initClientesController } from './clientes/ui/clientesController.js'
+import { DOM_IDS } from './app/ui/domIds.js'
+import { getEl } from './app/ui/domAdapter.js'
 
-// Inicializar controladores en orden
-initAppController(store)
+// Inicializar orquestadores principales
+const appCtrl = initAppController(store)
 initLoginController(store)
 
 // Inicializar Activos
@@ -27,3 +30,17 @@ initActivosFormController(store)
 initActivosTableController(store)
 initActivosDetailController(store)
 initActivosSearchAndMetricsController(store)
+
+// Construir objeto DOM para inyectar dependencias UI
+const domContext = {
+  clientes: {
+    section: getEl(DOM_IDS.VIEW_CLIENTES),
+    form: getEl(DOM_IDS.CLIENTE_FORM),
+    tabla: getEl(DOM_IDS.CLIENTES_LIST),
+    inputBuscar: getEl(DOM_IDS.CLIENTES_SEARCH),
+    btnNuevo: getEl(DOM_IDS.BTN_NUEVO_CLIENTE)
+  }
+}
+
+// Inicializar controladores de dominio
+initClientesController(domContext, store, appCtrl)
