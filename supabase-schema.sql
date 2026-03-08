@@ -67,12 +67,12 @@ CREATE TABLE prestamos (
   -- Información del préstamo
   monto_original DECIMAL(15, 2) NOT NULL CHECK (monto_original > 0),
   tasa_interes DECIMAL(5, 2) NOT NULL CHECK (tasa_interes >= 0), -- % mensual o anual
-  tipo_interes VARCHAR(20) NOT NULL, -- SIMPLE, COMPUESTO, MIXTO
+  tipo_interes VARCHAR(20) NOT NULL CHECK (tipo_interes IN ('CUOTA_FIJA', 'DISMINUIR_CUOTA', 'INTERES_FIJO', 'CAPITAL_AL_FINAL')),
   
   -- Períodos
   fecha_inicio DATE NOT NULL,
   fecha_fin DATE NOT NULL,
-  frecuencia_pago VARCHAR(20) NOT NULL, -- DIARIA, SEMANAL, QUINCENAL, MENSUAL
+  frecuencia_pago VARCHAR(20) NOT NULL CHECK (frecuencia_pago IN ('DIARIO', 'INTERDIARIO', 'SEMANAL', 'BISEMANAL', 'QUINCENAL', '15_Y_FIN_MES', 'MENSUAL', 'ANUAL')),
   
   -- Estado
   estado VARCHAR(20) DEFAULT 'ACTIVO', -- ACTIVO, COMPLETADO, ARCHIVADO
