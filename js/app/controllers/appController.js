@@ -26,6 +26,7 @@ const VIEW_NAV_MAP = Object.freeze({
   'activo-form':     DOM_IDS.NAV_ACTIVOS,
   cobranza:          DOM_IDS.NAV_COBRANZA,
   'cobranza-detail': DOM_IDS.NAV_COBRANZA,
+  creditos:          DOM_IDS.NAV_CREDITOS,
   reportes:          DOM_IDS.NAV_REPORTES,
 })
 
@@ -44,6 +45,7 @@ const VIEW_ID_MAP = Object.freeze({
   'activo-form':     DOM_IDS.VIEW_ACTIVO_FORM,
   cobranza:          DOM_IDS.VIEW_COBRANZA,
   'cobranza-detail': DOM_IDS.VIEW_COBRANZA_DETAIL,
+  creditos:          DOM_IDS.VIEW_CREDITOS,
   reportes:          DOM_IDS.VIEW_REPORTES,
 })
 
@@ -203,6 +205,7 @@ function _updateHeaderTitle(viewName) {
     'activo-form':     'Nuevo activo',
     cobranza:          'Cobranza',
     'cobranza-detail': 'Detalle cobranza',
+    creditos:          'Créditos',
     reportes:          'Reportes',
   }
   setText(DOM_IDS.APP_TITLE, titles[viewName] ?? 'Prestamistas')
