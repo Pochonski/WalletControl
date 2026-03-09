@@ -22,6 +22,7 @@ import { initPrestamosController } from './prestamos/ui/prestamosController.js'
 import { initDashboardController } from './app/controllers/dashboardController.js'
 import { initCobranzasListController } from './cobranzas/ui/cobranzasListController.js'
 import { initCobranzaDetailController } from './cobranzas/ui/cobranzaDetailController.js'
+import { initCreditosController } from './creditos/ui/creditosController.js'
 import { DOM_IDS } from './app/ui/domIds.js'
 import { getEl } from './app/ui/domAdapter.js'
 
@@ -73,3 +74,6 @@ initPrestamosController(domContext, store, appCtrl)
 initDashboardController(store, appCtrl)
 initCobranzasListController(domContext, store, appCtrl)
 initCobranzaDetailController(domContext, store, appCtrl)
+
+// Inicializar Créditos
+initCreditosController(store, appCtrl)

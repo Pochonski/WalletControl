@@ -604,15 +604,203 @@
         </section>
 
         <!-- ============================================================== -->
-        <!-- CRÉDITOS                                                        -->
+        <!-- CRÉDITOS — Vista principal                                      -->
         <!-- ============================================================== -->
         <section id="view-creditos" class="view">
           <div class="view-toolbar">
-            <span class="toolbar-title">Créditos</span>
+            <div class="search-wrapper">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input id="creditos-search" type="search" class="search-input" placeholder="Buscar acreedor...">
+            </div>
+            <div class="toolbar-actions">
+              <button id="btn-nuevo-acreedor" class="btn btn-secondary btn-sm" type="button">+ Acreedor</button>
+              <button id="btn-nuevo-credito" class="btn btn-primary btn-sm" type="button">+ Crédito</button>
+            </div>
           </div>
-          <div id="creditos-content" class="card-list">
-            <!-- Contenido de créditos se cargará aquí -->
+          <div class="filter-bar">
+            <div class="filter-group">
+              <label for="creditos-filtro-estado">Estado</label>
+              <select id="creditos-filtro-estado">
+                <option value="">Todos</option>
+                <option value="ACTIVO">Activos</option>
+                <option value="COMPLETADO">Completados</option>
+                <option value="ARCHIVADO">Archivados</option>
+              </select>
+            </div>
           </div>
+          <div id="creditos-metrics" class="metrics-grid"></div>
+          <div id="creditos-content" class="card-list"></div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- CRÉDITOS — Formulario nuevo acreedor                           -->
+        <!-- ============================================================== -->
+        <section id="view-acreedor-form" class="view">
+          <form id="acreedor-form" novalidate>
+            <div class="form-section">
+              <h3 class="form-section-title">Datos del acreedor</h3>
+              <div class="form-group">
+                <label for="acreedor-nombre">Nombre completo *</label>
+                <input id="acreedor-nombre" name="nombre" type="text" placeholder="Nombre del prestamista mayor" required>
+              </div>
+              <div class="form-group">
+                <label for="acreedor-telefono">Teléfono</label>
+                <input id="acreedor-telefono" name="telefono" type="tel" placeholder="555-0000" inputmode="tel">
+              </div>
+              <div class="form-group">
+                <label for="acreedor-email">Correo electrónico</label>
+                <input id="acreedor-email" name="email" type="email" placeholder="acreedor@ejemplo.com" inputmode="email">
+              </div>
+              <div class="form-group">
+                <label for="acreedor-direccion">Dirección</label>
+                <textarea id="acreedor-direccion" name="direccion" rows="2" placeholder="Dirección del acreedor..."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="acreedor-notas">Notas</label>
+                <textarea id="acreedor-notas" name="notas" rows="2" placeholder="Observaciones..."></textarea>
+              </div>
+            </div>
+            <div id="acreedor-form-error" class="form-error hidden" role="alert"></div>
+            <div class="form-actions">
+              <button id="btn-cancel-acreedor" type="button" class="btn btn-secondary">Cancelar</button>
+              <button id="btn-submit-acreedor" type="submit" class="btn btn-primary">Guardar acreedor</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- CRÉDITOS — Formulario nuevo crédito recibido                   -->
+        <!-- ============================================================== -->
+        <section id="view-credito-form" class="view">
+          <form id="credito-form" novalidate>
+            <div class="form-section">
+              <h3 class="form-section-title">Acreedor</h3>
+              <div class="form-group">
+                <label for="credito-acreedor-id">Acreedor (prestamista mayor) *</label>
+                <select id="credito-acreedor-id" name="acreedor_id" required>
+                  <option value="">Seleccionar acreedor...</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3 class="form-section-title">Datos del crédito recibido</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="credito-tipo">Amortización *</label>
+                  <select id="credito-tipo" name="tipo_amortizacion" required>
+                    <option value="" disabled selected>Seleccione</option>
+                    <option value="CUOTA_FIJA">Cuota Fija</option>
+                    <option value="DISMINUIR_CUOTA">Disminuir Cuota</option>
+                    <option value="INTERES_FIJO">Interés Fijo</option>
+                    <option value="CAPITAL_AL_FINAL">Capital Al Final</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="credito-frecuencia">Modalidad *</label>
+                  <select id="credito-frecuencia" name="frecuencia_pago" required>
+                    <option value="" disabled selected>Seleccione</option>
+                    <option value="DIARIO">Diario</option>
+                    <option value="INTERDIARIO">Interdiario</option>
+                    <option value="SEMANAL">Semanal</option>
+                    <option value="BISEMANAL">Bisemanal</option>
+                    <option value="QUINCENAL">Quincenal</option>
+                    <option value="15_Y_FIN_MES">15 y fin de mes</option>
+                    <option value="MENSUAL">Mensual</option>
+                    <option value="ANUAL">Anual</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="credito-monto">Monto recibido *</label>
+                <input id="credito-monto" name="monto_original" type="number" min="0.01" step="0.01"
+                  placeholder="₡0.00" required inputmode="decimal">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="credito-tasa">Interés por período *</label>
+                  <input id="credito-tasa" name="tasa_interes" type="number" min="0" step="0.01"
+                    placeholder="%" required inputmode="decimal">
+                </div>
+                <div class="form-group">
+                  <label for="credito-num-cuotas">Número de cuotas</label>
+                  <input id="credito-num-cuotas" name="num_cuotas" type="number" min="1" step="1"
+                    placeholder="Auto" inputmode="numeric">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="credito-fecha">Fecha de inicio *</label>
+                  <input id="credito-fecha" name="fecha_inicio" type="date" required>
+                </div>
+                <div class="form-group">
+                  <label for="credito-fecha-primer-pago">Primer pago *</label>
+                  <input id="credito-fecha-primer-pago" name="fecha_primer_pago" type="date" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="credito-notas">Notas</label>
+                <textarea id="credito-notas" name="notas" rows="2" placeholder="Condiciones, garantías..."></textarea>
+              </div>
+            </div>
+            <div id="credito-resumen" class="loan-summary hidden"></div>
+            <div id="credito-form-error" class="form-error hidden" role="alert"></div>
+            <div class="form-actions">
+              <button id="btn-cancel-credito" type="button" class="btn btn-secondary">Cancelar</button>
+              <button id="btn-submit-credito" type="submit" class="btn btn-primary">Registrar crédito</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- CRÉDITOS — Detalle de crédito                                  -->
+        <!-- ============================================================== -->
+        <section id="view-credito-detail" class="view">
+          <div id="credito-detail-content" class="section-block">
+            <!-- Se renderiza dinámicamente -->
+          </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- CRÉDITOS — Formulario registrar pago al acreedor               -->
+        <!-- ============================================================== -->
+        <section id="view-pago-credito-form" class="view">
+          <form id="pago-credito-form" novalidate>
+            <div class="form-section">
+              <h3 class="form-section-title">Pago al acreedor</h3>
+              <input id="pago-credito-cuota-id" type="hidden">
+              <div class="form-group">
+                <label for="pago-credito-monto">Monto *</label>
+                <input id="pago-credito-monto" type="number" min="0.01" step="0.01" placeholder="0.00"
+                  required inputmode="decimal">
+              </div>
+              <div class="form-group">
+                <label for="pago-credito-fecha">Fecha de pago *</label>
+                <input id="pago-credito-fecha" type="date" required>
+              </div>
+              <div class="form-group">
+                <label for="pago-credito-metodo">Método de pago *</label>
+                <select id="pago-credito-metodo" required>
+                  <option value="EFECTIVO">Efectivo</option>
+                  <option value="TRANSFERENCIA">Transferencia</option>
+                  <option value="CHEQUE">Cheque</option>
+                  <option value="OTRO">Otro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="pago-credito-notas">Notas</label>
+                <textarea id="pago-credito-notas" rows="2" placeholder="Referencia, observaciones..."></textarea>
+              </div>
+            </div>
+            <div id="pago-credito-form-error" class="form-error hidden" role="alert"></div>
+            <div class="form-actions">
+              <button id="btn-cancel-pago-credito" type="button" class="btn btn-secondary">Cancelar</button>
+              <button id="btn-submit-pago-credito" type="submit" class="btn btn-primary">Registrar pago</button>
+            </div>
+          </form>
         </section>
 
         <!-- ============================================================== -->

@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    APP DE GESTIÓN DE PRÉSTAMOS - Estilos globales
    Mobile-first | CSS Variables | Sin framework
    ========================================================================== */
@@ -1851,3 +1851,99 @@ h3 {
   background: var(--color-primary-hover);
   box-shadow: 0 6px 20px rgba(29, 78, 216, 0.4);
 }
+
+/* --------------------------------------------------------------------------
+   MÓDULO CRÉDITOS
+   -------------------------------------------------------------------------- */
+
+/* Toolbar con múltiples acciones */
+.toolbar-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* Cards premium de crédito */
+.card-credito {
+  border-left: 3px solid var(--color-primary-light);
+  transition: border-color var(--transition-base), transform var(--transition-base);
+}
+
+.card-credito:hover {
+  border-left-color: var(--color-primary);
+}
+
+/* Cuotas de crédito */
+.cuotas-credito-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.cuota-credito-row {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  transition: background var(--transition-fast);
+}
+
+.cuota-credito-row:hover {
+  background: var(--color-surface-2);
+}
+
+.cuota-credito-row:last-child {
+  border-bottom: none;
+}
+
+.cuota-credito-row.cuota-pagada {
+  opacity: 0.55;
+  background: var(--color-surface-2);
+}
+
+.cuota-credito-row.cuota-vencida {
+  border-left: 3px solid var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+.cuota-credito-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.cuota-num {
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  min-width: 28px;
+}
+
+.cuota-fecha {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+.cuota-credito-montos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.875rem;
+  padding: var(--space-1) 0;
+}
+
+/* Ajustar nav-item font-size cuando hay 7 items */
+.bottom-nav .nav-item:nth-child(n+7) {
+  font-size: 0.625rem;
+}
+
+/* Con 7 items, todos los textos más pequeños */
+#bottom-nav {
+  overflow-x: hidden;
+}
+
+#bottom-nav .nav-item span {
+  font-size: 0.6rem;
+  line-height: 1.1;
+}
