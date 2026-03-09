@@ -25,6 +25,7 @@ export const DOM_IDS = Object.freeze({
   NAV_COBRANZA:          'nav-cobranza',
   NAV_PRESTAMOS:         'nav-prestamos',
   NAV_ACTIVOS:           'nav-activos',
+  NAV_CREDITOS:          'nav-creditos',
   NAV_REPORTES:          'nav-reportes',
 
   // ── Vistas principales ───────────────────────────────────────────────
@@ -43,6 +44,7 @@ export const DOM_IDS = Object.freeze({
   VIEW_ACTIVO_FORM:      'view-activo-form',
   VIEW_COBRANZA:         'view-cobranza',
   VIEW_COBRANZA_DETAIL:  'view-cobranza-detail',
+  VIEW_CREDITOS:         'view-creditos',
   VIEW_REPORTES:         'view-reportes',
 
   // ── Auth / Login ─────────────────────────────────────────────────────
