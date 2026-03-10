@@ -662,69 +662,118 @@ $$ LANGUAGE plpgsql;
 
 ```sql
 CREATE OR REPLACE FUNCTION crear_cuotas_prestamo(
-  p_prestamo_id UUID,
-  p_monto_original DECIMAL,
-  p_tasa_interes DECIMAL,
-  p_tipo_interes VARCHAR,
-  p_fecha_inicio DATE,
-  p_fecha_fin DATE,
-  p_frecuencia_pago VARCHAR
+  p_prestamo_id       UUID,
+  p_monto_original    DECIMAL,
+  p_tasa_interes      DECIMAL,
+  p_tipo_interes      VARCHAR,
+  p_fecha_inicio      DATE,
+  p_fecha_fin         DATE,
+  p_frecuencia_pago   VARCHAR,
+  p_fecha_primer_pago DATE DEFAULT NULL   -- ← nuevo parámetro
 )
 RETURNS VOID AS $$
 DECLARE
-  v_fecha_cuota DATE;
-  v_numero_cuota INTEGER := 1;
-  v_monto_cuota DECIMAL;
-  v_interes_cuota DECIMAL;
-  v_dias_intervalo INTEGER;
+  v_fecha_cuota     DATE;
+  v_numero_cuota    INTEGER := 1;
+  v_monto_cuota     DECIMAL;
+  v_interes_cuota   DECIMAL;
+  v_amortizacion    DECIMAL;
+  v_dias_intervalo  INTEGER;
+  v_meses_intervalo INTEGER;
+  v_saldo_insoluto  DECIMAL;
+  v_tasa_periodo    DECIMAL;
+  v_num_cuotas      INTEGER;
 BEGIN
-  -- Determinar intervalo en días según frecuencia
+  -- ── Intervalo según frecuencia ──────────────────────────────────────
   v_dias_intervalo := CASE p_frecuencia_pago
-    WHEN 'DIARIO' THEN 1
-    WHEN 'INTERDIARIO' THEN 2
-    WHEN 'SEMANAL' THEN 7
-    WHEN 'BISEMANAL' THEN 14
-    WHEN 'QUINCENAL' THEN 15
+    WHEN 'DIARIO'       THEN 1
+    WHEN 'INTERDIARIO'  THEN 2
+    WHEN 'SEMANAL'      THEN 7
+    WHEN 'BISEMANAL'    THEN 14
+    WHEN 'QUINCENAL'    THEN 15
     WHEN '15_Y_FIN_MES' THEN 15
-    WHEN 'MENSUAL' THEN 30
-    WHEN 'ANUAL' THEN 365
+    WHEN 'MENSUAL'      THEN NULL   -- usar meses reales
+    WHEN 'ANUAL'        THEN NULL
     ELSE 30
   END;
 
-  -- Determinar intervalo inicial (primer pago)
-  v_fecha_cuota := p_fecha_inicio;
+  v_meses_intervalo := CASE p_frecuencia_pago
+    WHEN 'MENSUAL' THEN 1
+    WHEN 'ANUAL'   THEN 12
+    ELSE NULL
+  END;
+
+  -- ── Tasa por período ────────────────────────────────────────────────
+  -- Tasa mensual como decimal (ej: 10% → 0.10)
+  v_tasa_periodo := (p_tasa_interes / 100.0) * COALESCE(
+    v_meses_intervalo,
+    CAST(v_dias_intervalo AS DECIMAL) / 30.0
+  );
+
+  -- ── Número de cuotas (para DISMINUIR_CUOTA y CUOTA_FIJA) ───────────
+  IF v_meses_intervalo IS NOT NULL THEN
+    v_num_cuotas := EXTRACT(YEAR FROM AGE(p_fecha_fin, COALESCE(p_fecha_primer_pago, p_fecha_inicio)))
+                  * 12 / v_meses_intervalo
+                  + EXTRACT(MONTH FROM AGE(p_fecha_fin, COALESCE(p_fecha_primer_pago, p_fecha_inicio)))
+                  / v_meses_intervalo
+                  + 1;
+  ELSE
+    v_num_cuotas := FLOOR(EXTRACT(DAY FROM (p_fecha_fin - COALESCE(p_fecha_primer_pago, p_fecha_inicio)))
+                    / v_dias_intervalo) + 1;
+  END IF;
+
+  IF v_num_cuotas <= 0 THEN v_num_cuotas := 1; END IF;
+
+  -- ── Punto de arranque: fecha_primer_pago si viene, si no fecha_inicio
+  v_fecha_cuota    := COALESCE(p_fecha_primer_pago, p_fecha_inicio);
+  v_saldo_insoluto := p_monto_original;
 
   WHILE v_fecha_cuota <= p_fecha_fin LOOP
-    -- Calcular interés para esta cuota según tipo de amortización
+
+    -- ── Interés de esta cuota según tipo ─────────────────────────────
+    v_interes_cuota := v_saldo_insoluto * v_tasa_periodo;
+
     CASE p_tipo_interes
+
       WHEN 'CUOTA_FIJA' THEN
-        v_interes_cuota := (p_monto_original * (p_tasa_interes / 100)) / (30 / v_dias_intervalo);
+        -- PMT real: C = P * r / (1 - (1+r)^-n)
+        IF v_tasa_periodo = 0 THEN
+          v_monto_cuota := p_monto_original / v_num_cuotas;
+          v_interes_cuota := 0;
+        ELSE
+          v_monto_cuota := p_monto_original * v_tasa_periodo
+                         / (1 - POWER(1 + v_tasa_periodo, -v_num_cuotas));
+          -- Recalcular interés sobre saldo actual (amortización creciente)
+          v_interes_cuota := v_saldo_insoluto * v_tasa_periodo;
+        END IF;
+        -- Reducir saldo insoluto (amortización = cuota - interés)
+        v_saldo_insoluto := v_saldo_insoluto - (v_monto_cuota - v_interes_cuota);
+
+      WHEN 'DISMINUIR_CUOTA' THEN
+        -- Amortización fija + interés sobre saldo decreciente
+        v_amortizacion  := p_monto_original / v_num_cuotas;
+        v_interes_cuota := v_saldo_insoluto * v_tasa_periodo;
+        v_monto_cuota   := v_amortizacion + v_interes_cuota;
+        v_saldo_insoluto := v_saldo_insoluto - v_amortizacion;
+
       WHEN 'INTERES_FIJO' THEN
-        v_interes_cuota := (p_monto_original * (p_tasa_interes / 100));
-      WHEN 'DISMINUIR_CUOTA' THEN 
-        -- Simulación simple de interés sobre saldo insoluto
-        v_interes_cuota := (p_monto_original * (p_tasa_interes / 100));
+        -- Solo interés; capital al final de cada período
+        v_monto_cuota := v_interes_cuota;
+
       WHEN 'CAPITAL_AL_FINAL' THEN
-        v_interes_cuota := (p_monto_original * (p_tasa_interes / 100));
+        -- Interés en cada cuota; última cuota incluye capital
+        IF v_fecha_cuota = p_fecha_fin THEN
+          v_monto_cuota := p_monto_original + v_interes_cuota;
+        ELSE
+          v_monto_cuota := v_interes_cuota;
+        END IF;
+
       ELSE
-        v_interes_cuota := (p_monto_original * p_tasa_interes / 100) / (30 / v_dias_intervalo);
+        v_monto_cuota := (p_monto_original / v_num_cuotas) + v_interes_cuota;
+
     END CASE;
 
-    -- Cálculo del monto total de la cuota
-    v_monto_cuota := (p_monto_original / 
-                      (EXTRACT(DAY FROM (p_fecha_fin - p_fecha_inicio)) / v_dias_intervalo)) + v_interes_cuota;
-
-    -- Si es CAPITAL_AL_FINAL, las cuotas intermedias solo pagan interés. La última paga el capital.
-    IF p_tipo_interes = 'CAPITAL_AL_FINAL' THEN
-       IF (v_fecha_cuota + v_dias_intervalo) > p_fecha_fin THEN
-         -- Última cuota
-         v_monto_cuota := p_monto_original + v_interes_cuota;
-       ELSE
-         v_monto_cuota := v_interes_cuota;
-       END IF;
-    END IF;
-
-    -- Insertar cuota
+    -- ── Insertar cuota ────────────────────────────────────────────────
     INSERT INTO cuotas (
       prestamo_id,
       numero_cuota,
@@ -737,16 +786,27 @@ BEGIN
       p_prestamo_id,
       v_numero_cuota,
       v_fecha_cuota,
-      p_monto_original / (EXTRACT(DAY FROM (p_fecha_fin - p_fecha_inicio)) / 30),
+      CASE WHEN p_tipo_interes IN ('CUOTA_FIJA', 'DISMINUIR_CUOTA')
+           THEN v_monto_cuota - v_interes_cuota
+           ELSE 0
+      END,
       v_interes_cuota,
       v_monto_cuota,
       v_monto_cuota
     );
 
-    -- Incrementar fecha (evita loops infinitos en 15_Y_FIN_MES simple)
-    v_fecha_cuota := v_fecha_cuota + v_dias_intervalo::INTEGER;
+    -- ── Avanzar fecha ─────────────────────────────────────────────────
+    IF v_meses_intervalo IS NOT NULL THEN
+      v_fecha_cuota := v_fecha_cuota + (v_meses_intervalo || ' months')::INTERVAL;
+    ELSE
+      v_fecha_cuota := v_fecha_cuota + v_dias_intervalo::INTEGER;
+    END IF;
 
     v_numero_cuota := v_numero_cuota + 1;
+
+    -- Protección anti-loop infinito
+    IF v_numero_cuota > 1000 THEN EXIT; END IF;
+
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;

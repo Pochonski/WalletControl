@@ -91,7 +91,8 @@ export const prestamosDataAdapter = {
         p_tipo_interes: resultado.tipo_interes,
         p_fecha_inicio: resultado.fecha_inicio,
         p_fecha_fin: resultado.fecha_fin,
-        p_frecuencia_pago: resultado.frecuencia_pago
+        p_frecuencia_pago: resultado.frecuencia_pago,
+        p_fecha_primer_pago: resultado.fecha_primer_pago || resultado.fecha_inicio
       })
 
       if (rpcError) {
