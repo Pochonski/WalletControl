@@ -11,6 +11,7 @@ import { supabaseClient } from '../supabaseClient.js'
 import { auditAdapter } from '../auditAdapter.js'
 import { localStorageAdapter } from '../localStorageAdapter.js'
 import { validatePrestamo, validatePrestamoUpdate } from '../../prestamos/domain/validatePrestamo.js'
+import { syncManager } from '../../sync/syncManager.js'
 
 export const prestamosDataAdapter = {
   /**
@@ -124,6 +125,9 @@ export const prestamosDataAdapter = {
 
       const actual = localStorageAdapter.get('prestamos') || []
       localStorageAdapter.set('prestamos', [prestamoOffline, ...actual])
+
+      // Encolar para sync cuando vuelva la conexión
+      syncManager.enqueue('prestamos', 'CREATE', prestamoOffline, prestamoOffline.id)
 
       return prestamoOffline
     }

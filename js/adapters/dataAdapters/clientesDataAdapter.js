@@ -13,6 +13,7 @@ import { encryptionAdapter } from '../encryptionAdapter.js'
 import { auditAdapter } from '../auditAdapter.js'
 import { localStorageAdapter } from '../localStorageAdapter.js'
 import { validateCliente, validateClienteUpdate } from '../../clientes/domain/validateCliente.js'
+import { syncManager } from '../../sync/syncManager.js'
 
 export const clientesDataAdapter = {
   /**
@@ -123,6 +124,9 @@ export const clientesDataAdapter = {
 
       const actual = localStorageAdapter.get('clientes') || []
       localStorageAdapter.set('clientes', [clienteOffline, ...actual])
+
+      // Encolar para sync cuando vuelva la conexión
+      syncManager.enqueue('clientes', 'CREATE', clienteOffline, clienteOffline.id)
 
       return clienteOffline
     }

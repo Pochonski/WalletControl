@@ -2,41 +2,72 @@
  * PagosController - Gestión completa de pagos
  *
  * Responsabilidades:
- * - Bind de eventos (crear pago, ver comprobantes)
- * - Dispatch de acciones a Redux
- * - Render de lista de pagos
- * - Validación y feedback de usuario
+ * - Cargar historial de pagos vía adapter
+ * - Mostrar formulario para registrar un nuevo pago
+ * - Marcar cuota como PAGADA al registrar
+ * - Render de lista con información del préstamo asociado
+ * - Exporta abrirNuevoPago() para que prestamosController lo use
  */
 
 import { ACTION_TYPES } from '../../app/state/actions.js'
+import { pagosDataAdapter } from '../../adapters/dataAdapters/pagosDataAdapter.js'
 import { showSuccess, showError } from '../../common/uiHelpers.js'
-import { fileUploadManager } from '../../storage/fileUploadManager.js'
-import { fileManager } from '../../storage/fileManager.js'
+import { DOM_IDS } from '../../app/ui/domIds.js'
+import { getEl } from '../../app/ui/domAdapter.js'
 
-export const initPagosController = (dom, store) => {
+// Estado local del formulario (cuota pre-seleccionada al venir desde prestamos)
+let _cuotaSeleccionada = null
+let _appCtrl = null
+let _store = null
+
+// ────────────────────────────────────────────────────────────────────
+// API PÚBLICA: llamar desde prestamosController para abrir el form
+// ────────────────────────────────────────────────────────────────────
+
+/**
+ * Abre el formulario de pago con una cuota pre-seleccionada.
+ * Llamar desde prestamosController al hacer clic en "Registrar pago".
+ *
+ * @param {string} cuotaId - UUID de la cuota a pagar
+ * @param {object} cuotaInfo - { numero_cuota, monto_cuota, fecha_vencimiento, prestamo }
+ */
+export const abrirNuevoPago = (cuotaId, cuotaInfo = null) => {
+  _cuotaSeleccionada = { id: cuotaId, ...cuotaInfo }
+  _renderCuotaInfo()
+
+  if (_appCtrl) {
+    _appCtrl.showView('pago-form')
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────
+// INIT
+// ────────────────────────────────────────────────────────────────────
+
+export const initPagosController = (dom, store, appCtrl) => {
+  _store = store
+  _appCtrl = appCtrl
+
   const pagosSection = dom.pagos
   if (!pagosSection) {
     console.warn('[pagosController] DOM pagos section not found')
     return
   }
 
-  const formulario = pagosSection.form
-  const lista = pagosSection.list
+  const lista = getEl(DOM_IDS.PAGOS_LIST)
+  const formulario = getEl(DOM_IDS.PAGO_FORM)
+  const btnNuevo = getEl(DOM_IDS.BTN_NUEVO_PAGO)
+  const btnCancel = getEl(DOM_IDS.BTN_CANCEL_PAGO)
 
-  // ────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────
   // 1. CARGAR pagos al iniciar
-  // ────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────
 
   const cargarPagos = async () => {
     store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
     try {
-      // TODO: Implement pagos data adapter
-      const pagos = []
-      store.dispatch({
-        type: ACTION_TYPES.LOAD_PAGOS,
-        payload: pagos
-      })
-      showSuccess('Pagos cargados')
+      const pagos = await pagosDataAdapter.load()
+      store.dispatch({ type: ACTION_TYPES.LOAD_PAGOS, payload: pagos })
     } catch (err) {
       console.error('[pagosController] Error loading:', err)
       showError('Error al cargar pagos: ' + err.message)
@@ -45,225 +76,199 @@ export const initPagosController = (dom, store) => {
     }
   }
 
-  // ────────────────────────────────────────────────────────────────
-  // 2. CREAR nuevo pago
-  // ────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────
+  // 2. BOTÓN "nuevo pago" desde la lista (sin cuota pre-cargada)
+  // ──────────────────────────────────────────────────────────────────
+
+  if (btnNuevo) {
+    btnNuevo.addEventListener('click', () => {
+      _cuotaSeleccionada = null
+      _renderCuotaInfo()
+      appCtrl.showView('pago-form')
+    })
+  }
+
+  if (btnCancel) {
+    btnCancel.addEventListener('click', () => {
+      _cuotaSeleccionada = null
+      formulario?.reset()
+      _limpiarError()
+      appCtrl.showView('pagos')
+    })
+  }
+
+  // ──────────────────────────────────────────────────────────────────
+  // 3. SUBMIT del formulario
+  // ──────────────────────────────────────────────────────────────────
 
   if (formulario) {
     formulario.addEventListener('submit', async (e) => {
       e.preventDefault()
+      _limpiarError()
 
-      const formData = new FormData(formulario)
-      const nuevoPago = Object.fromEntries(formData)
+      const cuotaId = _cuotaSeleccionada?.id
+        || formulario.querySelector('[name="cuota_id"]')?.value
+        || null
 
-      // Dispatch local (feedback inmediato)
-      store.dispatch({
-        type: ACTION_TYPES.ADD_PAGO,
-        payload: nuevoPago
-      })
+      if (!cuotaId) {
+        _mostrarError('Debes seleccionar una cuota a pagar.')
+        return
+      }
 
+      const nuevoPago = {
+        cuota_id: cuotaId,
+        monto: parseFloat(getEl(DOM_IDS.PAGO_MONTO)?.value || '0'),
+        fecha_pago: getEl(DOM_IDS.PAGO_FECHA)?.value,
+        metodo_pago: getEl(DOM_IDS.PAGO_METODO)?.value,
+        referencia_pago: getEl(DOM_IDS.PAGO_REFERENCIA)?.value || null,
+        notas: getEl(DOM_IDS.PAGO_NOTAS)?.value || null
+      }
+
+      store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
       try {
-        store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
+        const guardado = await pagosDataAdapter.save(nuevoPago)
 
-        // Handle file upload
-        const uploadResults = await handlePagoFileUploads(formulario, nuevoPago.id)
-
-        // Add file path to pago data
-        if (uploadResults.voucher) {
-          nuevoPago.comprobante_path = uploadResults.voucher
-        }
-
-        // TODO: Save to database
-        // const guardado = await pagosDataAdapter.save(nuevoPago)
+        store.dispatch({ type: ACTION_TYPES.ADD_PAGO, payload: guardado })
 
         showSuccess('Pago registrado exitosamente')
         formulario.reset()
-        clearPhotoPreviews(formulario)
+        _cuotaSeleccionada = null
+        _renderCuotaInfo()
+        appCtrl.showView('pagos')
       } catch (err) {
         console.error('[pagosController] Save error:', err)
-        showError('Error: ' + err.message)
+        _mostrarError(err.message)
       } finally {
         store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
       }
     })
   }
 
-  // ────────────────────────────────────────────────────────────────
-  // PHOTO PREVIEW HANDLERS
-  // ────────────────────────────────────────────────────────────────
-
-  if (formulario) {
-    setupPhotoPreviews(formulario)
-  }
-
-  // ────────────────────────────────────────────────────────────────
-  // 3. RENDER de lista
-  // ────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────
+  // 4. RENDER lista de pagos
+  // ──────────────────────────────────────────────────────────────────
 
   const render = () => {
-    const { pagos } = store.getState()
-    const { list } = pagos
-
     if (!lista) return
-
-    lista.innerHTML = ''
+    const { pagos } = store.getState()
+    const list = pagos?.list ?? []
 
     if (list.length === 0) {
       lista.innerHTML = `
-        <div style="text-align: center; padding: 20px; color: #999;">
-          No hay pagos registrados
+        <div class="empty-state">
+          <p>No hay pagos registrados.</p>
         </div>
       `
       return
     }
 
-    const fragment = document.createDocumentFragment()
+    const fmt = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' })
 
-    list.forEach(async (pago) => {
-      const item = document.createElement('div')
-      item.className = 'pago-item'
+    lista.innerHTML = list.map(pago => {
+      const clienteNombre = pago.cuotas?.prestamos?.clientes?.nombre ?? '—'
+      const numeroCuota = pago.cuotas?.numero_cuota ?? '—'
+      const monto = fmt.format(pago.monto)
+      const fecha = pago.fecha_pago
+        ? new Date(pago.fecha_pago + 'T00:00:00').toLocaleDateString('es-CR')
+        : '—'
+      const badge = _badgeEstado(pago.estado)
 
-      // Get voucher status
-      let voucherHtml = '<span style="color: #999;">Sin comprobante</span>'
-      if (pago.comprobante_path) {
-        voucherHtml = '<button class="btn-link view-voucher" data-path="' + pago.comprobante_path + '">Ver comprobante</button>'
-      }
-
-      item.innerHTML = `
-        <div class="pago-header">
-          <h4>$${pago.monto} - ${pago.metodo_pago}</h4>
-          <span class="badge">${pago.estado}</span>
-        </div>
-        <div class="pago-details">
-          <p>Fecha: ${pago.fecha_pago}</p>
-          <p>Comprobante: ${voucherHtml}</p>
+      return `
+        <div class="card pago-card">
+          <div class="card-header">
+            <span class="card-title">${clienteNombre}</span>
+            ${badge}
+          </div>
+          <div class="card-body">
+            <p><strong>Monto:</strong> ${monto}</p>
+            <p><strong>Fecha:</strong> ${fecha}</p>
+            <p><strong>Cuota #:</strong> ${numeroCuota}</p>
+            <p><strong>Método:</strong> ${pago.metodo_pago}</p>
+            ${pago.referencia_pago ? `<p><strong>Ref:</strong> ${pago.referencia_pago}</p>` : ''}
+          </div>
         </div>
       `
-
-      // Add voucher view handler
-      const viewBtn = item.querySelector('.view-voucher')
-      if (viewBtn) {
-        viewBtn.addEventListener('click', async (e) => {
-          e.preventDefault()
-          const path = e.target.dataset.path
-          try {
-            const result = await fileManager.getFileUrl('payment-vouchers', path)
-            if (result.success) {
-              window.open(result.url, '_blank')
-            }
-          } catch (err) {
-            console.error('Error viewing voucher:', err)
-          }
-        })
-      }
-
-      fragment.appendChild(item)
-    })
-
-    lista.appendChild(fragment)
+    }).join('')
   }
 
-  // ────────────────────────────────────────────────────────────────
-  // 4. SUSCRIBIR a cambios del estado
-  // ────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────
+  // 5. SUSCRIBIR al store
+  // ──────────────────────────────────────────────────────────────────
 
-  store.subscribe((newState, previousState) => {
-    // Re-render si cambió pagos
-    if (newState.pagos !== previousState.pagos) {
+  store.subscribe((newState, prevState) => {
+    if (newState.pagos !== prevState?.pagos) {
       render()
     }
   })
 
-  // ────────────────────────────────────────────────────────────────
-  // 5. RENDER INICIAL
-  // ────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────
+  // 6. INIT INICIAL
+  // ──────────────────────────────────────────────────────────────────
 
   cargarPagos()
   render()
 }
 
-// ──────────────────────────────────────────────────────────────────
-// HELPER FUNCTIONS
-// ──────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────
+// HELPERS PRIVADOS
+// ────────────────────────────────────────────────────────────────────
 
-/**
- * Handles uploading pago voucher
- */
-async function handlePagoFileUploads(form, pagoId) {
-  const results = {
-    voucher: null
-  }
+function _renderCuotaInfo() {
+  const infoEl = getEl(DOM_IDS.PAGO_CUOTA_INFO)
+  if (!infoEl) return
 
-  // Get file input
-  const voucherInput = form.querySelector('#upload-comprobante')
-
-  // Upload voucher
-  if (voucherInput?.files[0]) {
-    try {
-      const result = await fileUploadManager.uploadPaymentVoucher(
-        voucherInput.files[0],
-        pagoId,
-        store.getState().auth.user?.id
-      )
-      if (result.success) {
-        results.voucher = result.path
-      }
-    } catch (err) {
-      console.error('Error uploading voucher:', err)
-    }
-  }
-
-  return results
-}
-
-/**
- * Clears photo previews when form is reset
- */
-function clearPhotoPreviews(form) {
-  const previews = form.querySelectorAll('.photo-preview')
-  previews.forEach(preview => {
-    preview.innerHTML = ''
-    preview.classList.add('hidden')
-  })
-}
-
-/**
- * Sets up photo preview handlers for file inputs
- */
-function setupPhotoPreviews(form) {
-  const voucherInput = form.querySelector('#upload-comprobante')
-  const preview = form.querySelector('#preview-comprobante')
-
-  if (voucherInput && preview) {
-    voucherInput.addEventListener('change', (e) => {
-      const file = e.target.files[0]
-      if (file) {
-        if (file.type.startsWith('image/')) {
-          showImagePreview(file, preview)
-        } else {
-          preview.innerHTML = `<span style="color: #666;">Archivo: ${file.name}</span>`
-          preview.classList.remove('hidden')
-        }
-      } else {
-        preview.innerHTML = ''
-        preview.classList.add('hidden')
-      }
-    })
-  }
-}
-
-/**
- * Shows image preview in the specified element
- */
-function showImagePreview(file, previewElement) {
-  if (!file.type.startsWith('image/')) {
+  if (!_cuotaSeleccionada) {
+    infoEl.innerHTML = '<p style="color:#999;">Ninguna cuota seleccionada.</p>'
     return
   }
 
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    previewElement.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 150px; border-radius: 4px;">`
-    previewElement.classList.remove('hidden')
+  const fmt = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' })
+  const monto = _cuotaSeleccionada.monto_cuota
+    ? fmt.format(_cuotaSeleccionada.monto_cuota)
+    : '—'
+  const vencimiento = _cuotaSeleccionada.fecha_vencimiento
+    ? new Date(_cuotaSeleccionada.fecha_vencimiento + 'T00:00:00').toLocaleDateString('es-CR')
+    : '—'
+
+  infoEl.innerHTML = `
+    <p><strong>Cuota #${_cuotaSeleccionada.numero_cuota ?? '—'}</strong></p>
+    <p>Monto: ${monto}</p>
+    <p>Vencimiento: ${vencimiento}</p>
+  `
+
+  // Pre-llenar monto del formulario
+  const montoInput = getEl(DOM_IDS.PAGO_MONTO)
+  if (montoInput && _cuotaSeleccionada.monto_cuota) {
+    montoInput.value = _cuotaSeleccionada.monto_cuota
   }
-  reader.readAsDataURL(file)
+
+  // Establecer fecha de hoy por defecto
+  const fechaInput = getEl(DOM_IDS.PAGO_FECHA)
+  if (fechaInput && !fechaInput.value) {
+    fechaInput.value = new Date().toISOString().split('T')[0]
+  }
+}
+
+function _mostrarError(mensaje) {
+  const errEl = getEl(DOM_IDS.PAGO_FORM_ERROR)
+  if (!errEl) return
+  errEl.textContent = mensaje
+  errEl.classList.remove('hidden')
+}
+
+function _limpiarError() {
+  const errEl = getEl(DOM_IDS.PAGO_FORM_ERROR)
+  if (!errEl) return
+  errEl.textContent = ''
+  errEl.classList.add('hidden')
+}
+
+function _badgeEstado(estado) {
+  const clases = {
+    CONFIRMADO: 'badge-success',
+    PENDIENTE: 'badge-warning',
+    RECHAZADO: 'badge-error'
+  }
+  const cls = clases[estado] ?? 'badge-neutral'
+  return `<span class="badge ${cls}">${estado ?? '—'}</span>`
 }
