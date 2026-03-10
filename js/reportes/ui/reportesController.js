@@ -59,8 +59,7 @@ let _datosActivos = null
 
 export const initReportesController = (store, appCtrl) => {
   const selector = getEl(DOM_IDS.REPORTES_SELECTOR)
-  const viewer = getEl(DOM_IDS.REPORTES_VIEWER)
-  const exportBtn = getEl(DOM_IDS.REPORTES_EXPORT)
+  const viewer   = getEl(DOM_IDS.REPORTES_VIEWER)
 
   if (!selector) {
     console.warn('[reportesController] DOM selector not found')
@@ -74,7 +73,6 @@ export const initReportesController = (store, appCtrl) => {
   const renderSelector = () => {
     selector.classList.remove('hidden')
     if (viewer) viewer.classList.add('hidden')
-    if (exportBtn) exportBtn.classList.add('hidden')
     _reporteActivo = null
 
     selector.innerHTML = `
@@ -84,7 +82,7 @@ export const initReportesController = (store, appCtrl) => {
       <div class="reportes-grid">
         ${REPORTES.map(r => `
           <button class="reporte-card" data-id="${r.id}" type="button">
-            <span class="reporte-card-icon">${r.icono}</span>
+            <div class="reporte-card-icon">${r.icono}</div>
             <span class="reporte-card-titulo">${r.titulo}</span>
             <span class="reporte-card-desc">${r.descripcion}</span>
           </button>
@@ -108,37 +106,25 @@ export const initReportesController = (store, appCtrl) => {
     _reporteActivo = reporte
     selector.classList.add('hidden')
 
-    if (viewer) {
-      viewer.classList.remove('hidden')
-      viewer.innerHTML = `
-        <div class="reporte-header">
-          <button class="btn btn-ghost btn-sm" id="btn-reporte-volver" type="button">← Volver</button>
-          <span class="reporte-titulo">${reporte.icono} ${reporte.titulo}</span>
-        </div>
-        <div id="reporte-content" class="reporte-content">
-          <div class="loading-state">Cargando datos…</div>
-        </div>
-      `
+    if (!viewer) return
 
-      document.getElementById('btn-reporte-volver')?.addEventListener('click', () => {
-        renderSelector()
-      })
-    }
+    viewer.classList.remove('hidden')
+    viewer.innerHTML = `
+      <div class="reporte-header">
+        <button class="btn btn-ghost btn-sm" id="btn-reporte-volver" type="button">← Volver</button>
+        <span class="reporte-titulo">${reporte.icono} ${reporte.titulo}</span>
+        <button class="btn btn-secondary btn-sm" id="btn-exportar-csv" type="button">↓ CSV</button>
+      </div>
+      <div id="reporte-content" class="reporte-content">
+        <div class="loading-state">Cargando datos…</div>
+      </div>
+    `
 
-    // Mostrar botón de exportar
-    if (exportBtn) {
-      exportBtn.classList.remove('hidden')
-      exportBtn.innerHTML = `
-        <button class="btn btn-secondary btn-sm" id="btn-exportar-csv" type="button">
-          📥 Exportar CSV
-        </button>
-      `
-      document.getElementById('btn-exportar-csv')?.addEventListener('click', () => {
-        if (_datosActivos) {
-          exportarCSV(_datosActivos, reporte.id)
-        }
-      })
-    }
+    document.getElementById('btn-reporte-volver')?.addEventListener('click', renderSelector)
+
+    document.getElementById('btn-exportar-csv')?.addEventListener('click', () => {
+      if (_datosActivos?.length) exportarCSV(_datosActivos, reporte.id)
+    })
 
     try {
       const contentEl = document.getElementById('reporte-content')
