@@ -10,7 +10,6 @@ import { formatCurrency, formatCurrencyAbbrev } from '../../common/currencyForma
 import { renderBarChart } from '../charts/svgCharts.js'
 
 const SEGMENTOS = ['1-7 días', '8-30 días', '31-90 días', 'Más de 90 días']
-const SEGMENTO_COLORS = ['#f59e0b', '#f97316', '#ef4444', '#991b1b']
 
 export const renderMorosidadReport = async (container) => {
   const cuotas = await reportesDataAdapter.getMorosidad()
@@ -70,7 +69,6 @@ export const renderMorosidadReport = async (container) => {
               <th>Cuota #</th>
               <th>Días Atraso</th>
               <th>Saldo</th>
-              <th>Cobranza</th>
             </tr>
           </thead>
           <tbody>
@@ -82,7 +80,6 @@ export const renderMorosidadReport = async (container) => {
                 <td>${c.numero_cuota ?? '—'}</td>
                 <td><strong>${c.dias_atraso}</strong></td>
                 <td class="td-monto">${formatCurrency(c.saldo_pendiente)}</td>
-                <td>${c.cobranza_status ? `<span class="badge">${c.cobranza_status}</span>` : '—'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -104,8 +101,7 @@ export const renderMorosidadReport = async (container) => {
     Vencimiento: c.fecha_vencimiento,
     Dias_Atraso: c.dias_atraso,
     Segmento: c.segmento_mora,
-    Saldo_Pendiente: c.saldo_pendiente,
-    Cobranza_Status: c.cobranza_status ?? ''
+    Saldo_Pendiente: c.saldo_pendiente
   }))
 }
 

@@ -107,15 +107,11 @@ SELECT
   -- Datos del préstamo
   p.user_id,
   p.tasa_interes,
-  p.frecuencia_pago,
-
-  -- Estado de cobranza (si existe)
-  co.status                                              AS cobranza_status
+  p.frecuencia_pago
 
 FROM cuotas c
 JOIN prestamos p ON p.id = c.prestamo_id
 JOIN clientes cl ON cl.id = p.cliente_id
-LEFT JOIN cobranzas co ON co.payment_id = c.id
 WHERE c.estado = 'VENCIDA'
   AND c.fecha_vencimiento < CURRENT_DATE;
 
@@ -179,10 +175,10 @@ CREATE OR REPLACE FUNCTION fn_rentabilidad_mensual(
   p_meses   INT DEFAULT 12
 )
 RETURNS TABLE (
-  mes              TEXT,
-  interes_cobrado  DECIMAL,
-  ganancia_activos DECIMAL,
-  total            DECIMAL
+  mes               TEXT,
+  interes_prestamos DECIMAL,
+  ganancia_activos  DECIMAL,
+  total_mes         DECIMAL
 )
 LANGUAGE sql
 STABLE
@@ -197,8 +193,6 @@ AS $$
   cobros_mes AS (
     SELECT
       DATE_TRUNC('month', pg.fecha_pago::TIMESTAMP) AS mes,
-      -- Aproximar el interés cobrado como diferencia entre monto pago y capital
-      -- (simplificado; en producción se podría calcular desde cuotas.interes_aplicable)
       COALESCE(SUM(c.interes_aplicable), 0)         AS interes
     FROM pagos pg
     JOIN cuotas c ON c.id = pg.cuota_id
@@ -219,10 +213,10 @@ AS $$
     GROUP BY DATE_TRUNC('month', a.fecha_venta::TIMESTAMP)
   )
   SELECT
-    TO_CHAR(m.mes_inicio, 'YYYY-MM')              AS mes,
-    COALESCE(cm.interes, 0)                        AS interes_cobrado,
-    COALESCE(am.ganancia, 0)                       AS ganancia_activos,
-    COALESCE(cm.interes, 0) + COALESCE(am.ganancia, 0) AS total
+    TO_CHAR(m.mes_inicio, 'YYYY-MM')                       AS mes,
+    COALESCE(cm.interes, 0)                                 AS interes_prestamos,
+    COALESCE(am.ganancia, 0)                                AS ganancia_activos,
+    COALESCE(cm.interes, 0) + COALESCE(am.ganancia, 0)     AS total_mes
   FROM meses m
   LEFT JOIN cobros_mes   cm ON cm.mes = m.mes_inicio
   LEFT JOIN activos_mes  am ON am.mes = m.mes_inicio
@@ -231,13 +225,45 @@ $$;
 
 
 -- ────────────────────────────────────────────────────────────
+-- VISTA 4: vw_rentabilidad_acumulada
+-- Totales históricos combinados (interés + activos) por usuario.
+-- ────────────────────────────────────────────────────────────
+
+CREATE OR REPLACE VIEW vw_rentabilidad_acumulada AS
+SELECT
+  p.user_id,
+  COALESCE(SUM(pg_i.interes_cobrado), 0)    AS interes_total,
+  COALESCE(SUM(a.ganancia), 0)              AS ganancia_activos,
+  COALESCE(SUM(pg_i.interes_cobrado), 0)
+    + COALESCE(SUM(a.ganancia), 0)          AS total_acumulado
+FROM (SELECT DISTINCT user_id FROM prestamos) p
+LEFT JOIN (
+  SELECT
+    pg.user_id,
+    SUM(c.interes_aplicable) AS interes_cobrado
+  FROM pagos pg
+  JOIN cuotas c ON c.id = pg.cuota_id
+  WHERE pg.estado = 'CONFIRMADO'
+  GROUP BY pg.user_id
+) pg_i ON pg_i.user_id = p.user_id
+LEFT JOIN (
+  SELECT user_id, SUM(ganancia) AS ganancia
+  FROM activos
+  WHERE estado = 'VENDIDO'
+  GROUP BY user_id
+) a ON a.user_id = p.user_id
+GROUP BY p.user_id;
+
+
+-- ────────────────────────────────────────────────────────────
 -- PERMISOS
 -- Dar acceso a usuarios autenticados
 -- ────────────────────────────────────────────────────────────
 
-GRANT SELECT ON vw_resumen_cartera     TO authenticated;
-GRANT SELECT ON vw_cobros_por_metodo   TO authenticated;
-GRANT SELECT ON vw_morosidad_detalle   TO authenticated;
+GRANT SELECT ON vw_resumen_cartera       TO authenticated;
+GRANT SELECT ON vw_cobros_por_metodo     TO authenticated;
+GRANT SELECT ON vw_morosidad_detalle     TO authenticated;
+GRANT SELECT ON vw_rentabilidad_acumulada TO authenticated;
 
 GRANT EXECUTE ON FUNCTION fn_cobros_por_periodo   TO authenticated;
 GRANT EXECUTE ON FUNCTION fn_rentabilidad_mensual TO authenticated;
