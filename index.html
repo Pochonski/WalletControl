@@ -268,7 +268,7 @@
                     <option value="" disabled selected>Seleccione</option>
                     <option value="CUOTA_FIJA">Cuota Fija</option>
                     <option value="DISMINUIR_CUOTA">Disminuir Cuota</option>
-                    <option value="INTERES_FIJO">Interes Fijo</option>
+                    <option value="INTERES_FIJO">Interés Fijo</option>
                     <option value="CAPITAL_AL_FINAL">Capital Al Final</option>
                   </select>
                 </div>
@@ -296,32 +296,37 @@
 
               <div class="form-row">
                 <div class="form-group">
-                  <label for="prestamo-tasa">Interés *</label>
+                  <label for="prestamo-tasa">Interés mensual (%) *</label>
                   <input id="prestamo-tasa" name="tasa" type="number" min="0" step="0.01" placeholder="%" required
                     inputmode="decimal">
                 </div>
                 <div class="form-group">
-                  <!-- Espacio vacío o podría ir otro campo en el futuro -->
+                  <label for="prestamo-num-cuotas">Número de cuotas *</label>
+                  <input id="prestamo-num-cuotas" name="num_cuotas" type="number" min="1" step="1" placeholder="Ej: 12"
+                    required inputmode="numeric">
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
-                  <label for="prestamo-monto-cuotas">Monto Cuotas</label>
-                  <input id="prestamo-monto-cuotas" type="text" placeholder="₡0.00" readonly>
+                  <label for="prestamo-monto-cuotas">Cuota estimada</label>
+                  <input id="prestamo-monto-cuotas" type="text" placeholder="₡0.00" readonly
+                    style="background: var(--color-surface-alt, #f8f8f8); font-weight: 600; color: var(--color-primary);">
+                  <span id="prestamo-cuota-label"
+                    style="font-size: 0.72rem; color: var(--color-text-light); margin-top: 2px; display: block;"></span>
                 </div>
                 <div class="form-group">
-                  <label for="prestamo-fecha">Fecha *</label>
-                  <input id="prestamo-fecha" name="fecha_inicio" type="date" required>
+                  <label for="prestamo-fecha-inicio">Fecha desembolso *</label>
+                  <input id="prestamo-fecha-inicio" name="fecha_inicio" type="date" required>
                 </div>
               </div>
 
               <div class="form-group">
-                <label for="prestamo-fecha-primer-pago">Fecha Primer Pago *</label>
+                <label for="prestamo-fecha-primer-pago">Fecha primer pago *</label>
                 <input id="prestamo-fecha-primer-pago" name="fecha_primer_pago" type="date" required>
               </div>
             </div>
-            <div id="prestamo-resumen" class="loan-summary hidden"></div>
+            <div id="prestamo-resumen" class="loan-summary" style="display:none;"></div>
             <div id="prestamo-form-error" class="form-error hidden" role="alert"></div>
             <div class="form-actions">
               <button id="btn-cancel-prestamo" type="button" class="btn btn-secondary">Cancelar</button>
