@@ -1947,10 +1947,21 @@ h3 {
   text-align: center;
 }
 
-.kpi-card--blue  { border-left: 4px solid #3b82f6; }
-.kpi-card--green { border-left: 4px solid #10b981; }
-.kpi-card--amber { border-left: 4px solid #f59e0b; }
-.kpi-card--red   { border-left: 4px solid #ef4444; }
+.kpi-card--blue {
+  border-left: 4px solid #3b82f6;
+}
+
+.kpi-card--green {
+  border-left: 4px solid #10b981;
+}
+
+.kpi-card--amber {
+  border-left: 4px solid #f59e0b;
+}
+
+.kpi-card--red {
+  border-left: 4px solid #ef4444;
+}
 
 .kpi-card--small {
   padding: var(--spacing-sm);
@@ -2054,12 +2065,23 @@ h3 {
   font-variant-numeric: tabular-nums;
 }
 
-.td-positive { color: #10b981; }
-.td-negative { color: #ef4444; }
+.td-positive {
+  color: #10b981;
+}
+
+.td-negative {
+  color: #ef4444;
+}
 
 /* Filas de mora */
-.tr-medio td  { background: #fef9c3; }
-.tr-alto td   { background: #fee2e2; }
+.tr-medio td {
+  background: #fef9c3;
+}
+
+.tr-alto td {
+  background: #fee2e2;
+}
+
 .tr-critico td {
   background: #fca5a5;
   font-weight: 600;
@@ -2120,5 +2142,4 @@ h3 {
   .kpi-valor {
     font-size: var(--font-size-lg);
   }
-}
 }
