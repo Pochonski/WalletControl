@@ -50,6 +50,28 @@ export const initialState = Object.freeze({
     loaded: false,
   },
 
+  // Créditos: el prestamista como deudor (lado pasivo)
+  acreedores: {
+    list: [],             // [ACREEDOR]
+    loaded: false,
+  },
+
+  creditos: {
+    list: [],             // [CREDITO]
+    selectedId: null,
+    loaded: false,
+  },
+
+  cuotasCredito: {
+    byCreditoId: {},      // { [creditoId]: [CUOTA_CREDITO] }
+    loaded: false,
+  },
+
+  pagosCredito: {
+    list: [],             // [PAGO_CREDITO]
+    loaded: false,
+  },
+
   pendingSync: [],        // [{ id, entityType, entityId, action, payload, timestamp }]
 })
 
@@ -338,8 +360,108 @@ export function reducer(state = initialState, action) {
         },
       }
 
+    // ── Créditos ───────────────────────────────────────────────────────────
+    case ACTION_TYPES.LOAD_ACREEDORES:
+      return { ...state, acreedores: { list: action.payload, loaded: true } }
+
+    case ACTION_TYPES.ADD_ACREEDOR:
+      return {
+        ...state,
+        acreedores: {
+          ...state.acreedores,
+          list: [...state.acreedores.list, action.payload]
+            .sort((a, b) => a.nombre.localeCompare(b.nombre)),
+        },
+      }
+
+    case ACTION_TYPES.UPDATE_ACREEDOR:
+      return {
+        ...state,
+        acreedores: {
+          ...state.acreedores,
+          list: state.acreedores.list.map(a =>
+            a.id === action.payload.id ? { ...a, ...action.payload } : a
+          ),
+        },
+      }
+
+    case ACTION_TYPES.LOAD_CREDITOS:
+      return { ...state, creditos: { ...state.creditos, list: action.payload, loaded: true } }
+
+    case ACTION_TYPES.ADD_CREDITO:
+      return {
+        ...state,
+        creditos: {
+          ...state.creditos,
+          list: [action.payload, ...state.creditos.list],
+        },
+      }
+
+    case ACTION_TYPES.UPDATE_CREDITO:
+      return {
+        ...state,
+        creditos: {
+          ...state.creditos,
+          list: state.creditos.list.map(c =>
+            c.id === action.payload.id ? { ...c, ...action.payload } : c
+          ),
+        },
+      }
+
+    case ACTION_TYPES.ARCHIVE_CREDITO:
+      return {
+        ...state,
+        creditos: {
+          ...state.creditos,
+          list: state.creditos.list.map(c =>
+            c.id === action.payload ? { ...c, estado: 'ARCHIVADO' } : c
+          ),
+        },
+      }
+
+    case ACTION_TYPES.SET_SELECTED_CREDITO:
+      return { ...state, creditos: { ...state.creditos, selectedId: action.payload } }
+
+    case ACTION_TYPES.LOAD_CUOTAS_CREDITO: {
+      const { creditoId, cuotas } = action.payload
+      return {
+        ...state,
+        cuotasCredito: {
+          ...state.cuotasCredito,
+          byCreditoId: { ...state.cuotasCredito.byCreditoId, [creditoId]: cuotas },
+          loaded: true,
+        },
+      }
+    }
+
+    case ACTION_TYPES.UPDATE_CUOTA_CREDITO: {
+      const cuota = action.payload
+      const existentes = state.cuotasCredito.byCreditoId[cuota.credito_id] ?? []
+      return {
+        ...state,
+        cuotasCredito: {
+          ...state.cuotasCredito,
+          byCreditoId: {
+            ...state.cuotasCredito.byCreditoId,
+            [cuota.credito_id]: existentes.map(c => c.id === cuota.id ? { ...c, ...cuota } : c),
+          },
+        },
+      }
+    }
+
+    case ACTION_TYPES.LOAD_PAGOS_CREDITO:
+      return { ...state, pagosCredito: { list: action.payload, loaded: true } }
+
+    case ACTION_TYPES.ADD_PAGO_CREDITO:
+      return {
+        ...state,
+        pagosCredito: {
+          ...state.pagosCredito,
+          list: [action.payload, ...state.pagosCredito.list],
+        },
+      }
+
     // ── Sync ─────────────────────────────────────────────────────────────
-    case ACTION_TYPES.MARK_PENDING_SYNC:
     case ACTION_TYPES.MARK_PENDING_SYNC:
       return {
         ...state,
