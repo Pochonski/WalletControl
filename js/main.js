@@ -22,6 +22,7 @@ import { initPrestamosController } from './prestamos/ui/prestamosController.js'
 import { initDashboardController } from './app/controllers/dashboardController.js'
 import { initCobranzasListController } from './cobranzas/ui/cobranzasListController.js'
 import { initCobranzaDetailController } from './cobranzas/ui/cobranzaDetailController.js'
+import { initPagosController } from './pagos/ui/pagosController.js'
 import { DOM_IDS } from './app/ui/domIds.js'
 import { getEl } from './app/ui/domAdapter.js'
 
@@ -59,6 +60,9 @@ const domContext = {
     btnRefresh: getEl(DOM_IDS.COBRANZAS_BTN_REFRESH),
     searchInput: getEl(DOM_IDS.COBRANZAS_SEARCH)
   },
+  pagos: {
+    section: getEl(DOM_IDS.VIEW_PAGOS)
+  },
   'cobranza-detail': {
     info: getEl(DOM_IDS.COBRANZA_DETAIL_INFO),
     actions: getEl(DOM_IDS.COBRANZA_DETAIL_ACTIONS),
@@ -73,3 +77,4 @@ initPrestamosController(domContext, store, appCtrl)
 initDashboardController(store, appCtrl)
 initCobranzasListController(domContext, store, appCtrl)
 initCobranzaDetailController(domContext, store, appCtrl)
+initPagosController(domContext, store, appCtrl)
