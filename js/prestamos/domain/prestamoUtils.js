@@ -78,14 +78,8 @@ export function calcularFechaFin(fechaPrimerPago, numCuotas, frecuencia) {
  * @returns {number} tasa decimal por período
  */
 export function getTasaPorPeriodo(tasaMensualPct, frecuencia) {
-    const tasa = tasaMensualPct / 100
-    const { dias, meses } = getDiasPorFrecuencia(frecuencia)
-    if (meses !== null) {
-        // Para mensual: tasa directa; para anual: tasa * 12
-        return tasa * meses
-    }
-    // Días: proporcional a 30 días base mensual
-    return tasa * (dias / 30)
+    // El usuario indicó que la tasa ingresada es directamente la tasa por período (cuota)
+    return tasaMensualPct / 100
 }
 
 /**
@@ -105,7 +99,7 @@ export function calcularMontoCuota(monto, tasaMensualPct, numCuotas, tipo, frecu
     }
 
     const r = getTasaPorPeriodo(tasaMensualPct, frecuencia)
-    const interesPorPeriodo = monto * r
+    const interesPeriodo = monto * r
 
     switch ((tipo || '').toUpperCase()) {
         case 'CUOTA_FIJA': {
@@ -120,23 +114,23 @@ export function calcularMontoCuota(monto, tasaMensualPct, numCuotas, tipo, frecu
 
         case 'INTERES_FIJO': {
             // Solo paga interés cada período; capital al final
-            return { cuota: interesPorPeriodo, interesPeriodo, label: 'Solo interés por período' }
+            return { cuota: interesPeriodo, interesPeriodo, label: 'Solo interés por período' }
         }
 
         case 'DISMINUIR_CUOTA': {
             // Primera cuota (la mayor): amortización fija + interés sobre saldo total
             const amortizacion = monto / numCuotas
-            const cuota = amortizacion + interesPorPeriodo
+            const cuota = amortizacion + interesPeriodo
             return { cuota, interesPeriodo, label: 'Cuota decrece (primera cuota)' }
         }
 
         case 'CAPITAL_AL_FINAL': {
             // Solo interés hasta la última cuota
-            return { cuota: interesPorPeriodo, interesPeriodo, label: 'Interés hasta vencimiento' }
+            return { cuota: interesPeriodo, interesPeriodo, label: 'Interés hasta vencimiento' }
         }
 
         default:
-            return { cuota: interesPorPeriodo, interesPeriodo, label: 'Interés estimado' }
+            return { cuota: interesPeriodo, interesPeriodo, label: 'Interés estimado' }
     }
 }
 

@@ -704,11 +704,8 @@ BEGIN
   END;
 
   -- ── Tasa por período ────────────────────────────────────────────────
-  -- Tasa mensual como decimal (ej: 10% → 0.10)
-  v_tasa_periodo := (p_tasa_interes / 100.0) * COALESCE(
-    v_meses_intervalo,
-    CAST(v_dias_intervalo AS DECIMAL) / 30.0
-  );
+  -- La tasa ingresada es directamente la del período (ej: 10% → 0.10)
+  v_tasa_periodo := p_tasa_interes / 100.0;
 
   -- ── Número de cuotas (para DISMINUIR_CUOTA y CUOTA_FIJA) ───────────
   IF v_meses_intervalo IS NOT NULL THEN
