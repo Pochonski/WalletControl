@@ -21,14 +21,16 @@ export const reportesDataAdapter = {
     const { data: { user } } = await supabaseClient.auth.getUser()
     if (!user) throw new Error('No autorizado')
 
+    // maybeSingle() devuelve null si no hay filas (usuario sin préstamos aún)
+    // .single() lanza 406 / PGRST116 cuando la vista devuelve 0 filas
     const { data, error } = await supabaseClient
       .from('vw_resumen_cartera')
       .select('*')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (error) throw error
-    return data
+    return data ?? null
   },
 
   /**
@@ -161,13 +163,14 @@ export const reportesDataAdapter = {
     const { data: { user } } = await supabaseClient.auth.getUser()
     if (!user) throw new Error('No autorizado')
 
+    // maybeSingle() para manejar usuario sin activos/pagos aún (0 filas)
     const { data, error } = await supabaseClient
       .from('vw_rentabilidad_acumulada')
       .select('*')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (error) throw error
-    return data
+    return data ?? null
   }
 }

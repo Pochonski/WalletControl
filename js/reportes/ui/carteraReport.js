@@ -13,11 +13,31 @@ import { renderPieChart } from '../charts/svgCharts.js'
  * @param {HTMLElement} container
  * @returns {Promise<object[]>} datos para exportar CSV
  */
+// Valores por defecto cuando el usuario aún no tiene préstamos registrados
+const _RESUMEN_VACIO = {
+  total_prestado: 0,
+  total_cobrado: 0,
+  total_saldo_pendiente: 0,
+  total_interes_generado: 0,
+  total_interes_pendiente: 0,
+  monto_en_mora: 0,
+  prestamos_activos: 0,
+  prestamos_completados: 0,
+  prestamos_archivados: 0,
+  total_cuotas: 0,
+  cuotas_pendientes: 0,
+  cuotas_pagadas: 0,
+  cuotas_vencidas: 0
+}
+
 export const renderCarteraReport = async (container) => {
-  const [resumen, prestamos] = await Promise.all([
+  const [resumenData, prestamos] = await Promise.all([
     reportesDataAdapter.getResumenCartera(),
     reportesDataAdapter.getPrestamosActivos()
   ])
+
+  // Fallback a ceros si el usuario aún no tiene préstamos (null = 0 filas en la vista)
+  const resumen = resumenData ?? _RESUMEN_VACIO
 
   const porcMora = resumen.total_prestado > 0
     ? ((resumen.monto_en_mora / resumen.total_prestado) * 100).toFixed(1)
