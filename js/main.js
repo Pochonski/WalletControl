@@ -23,6 +23,7 @@ import { initDashboardController } from './app/controllers/dashboardController.j
 import { initCobranzasListController } from './cobranzas/ui/cobranzasListController.js'
 import { initCobranzaDetailController } from './cobranzas/ui/cobranzaDetailController.js'
 import { initPagosController } from './pagos/ui/pagosController.js'
+import { initReportesController } from './reportes/ui/reportesController.js'
 import { syncManager } from './sync/syncManager.js'
 import { DOM_IDS } from './app/ui/domIds.js'
 import { getEl } from './app/ui/domAdapter.js'
@@ -82,3 +83,4 @@ initDashboardController(store, appCtrl)
 initCobranzasListController(domContext, store, appCtrl)
 initCobranzaDetailController(domContext, store, appCtrl)
 initPagosController(domContext, store, appCtrl)
+initReportesController(store, appCtrl)
