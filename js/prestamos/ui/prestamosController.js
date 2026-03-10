@@ -68,10 +68,11 @@ export const initPrestamosController = (dom, store, appCtrl) => {
     return
   }
 
-  const formulario = prestamosSection.form
-  const tabla = prestamosSection.tabla
-  const selectCliente = prestamosSection.selectCliente
-  const btnNuevo = prestamosSection.btnNuevo
+  // Usar los elementos del domContext o buscarlos directamente (fallback robusto)
+  const formulario = prestamosSection.form || document.getElementById('prestamo-form')
+  const tabla = prestamosSection.tabla || document.getElementById('prestamos-list')
+  const selectCliente = prestamosSection.selectCliente || document.getElementById('prestamo-cliente-id')
+  const btnNuevo = prestamosSection.btnNuevo || document.getElementById('btn-nuevo-prestamo')
   const inputBuscar = document.getElementById('prestamos-search')
   const filterBar = document.getElementById('prestamos-filter-bar')
 
@@ -85,7 +86,6 @@ export const initPrestamosController = (dom, store, appCtrl) => {
   const elTipo = () => document.getElementById('prestamo-tipo')
   const elFrecuencia = () => document.getElementById('prestamo-frecuencia')
   const elNumCuotas = () => document.getElementById('prestamo-num-cuotas')
-  const elFechaInicio = () => document.getElementById('prestamo-fecha-inicio')
   const elFechaPrimer = () => document.getElementById('prestamo-fecha-primer-pago')
   const elMontoCuotas = () => document.getElementById('prestamo-monto-cuotas')
   const elCuotaLabel = () => document.getElementById('prestamo-cuota-label')
@@ -171,7 +171,8 @@ export const initPrestamosController = (dom, store, appCtrl) => {
     const tasa = parseFloat(elTasa()?.value) || 0
     const tipo = elTipo()?.value || 'CUOTA_FIJA'
     const frecuencia = elFrecuencia()?.value || 'MENSUAL'
-    const numCuotas = parseInt(elNumCuotas()?.value, 10) || 0
+    const numCuotasRaw = elNumCuotas()?.value
+    const numCuotas = numCuotasRaw ? parseInt(numCuotasRaw, 10) : null  // null = indefinido
     const fechaPrimer = elFechaPrimer()?.value || ''
 
     const montoCuotasEl = elMontoCuotas()
@@ -180,22 +181,26 @@ export const initPrestamosController = (dom, store, appCtrl) => {
 
     if (!montoCuotasEl) return
 
-    if (!monto || !tasa || !numCuotas) {
+    // Necesitamos al menos monto y tasa para calcular algo
+    if (!monto || !tasa) {
       montoCuotasEl.value = ''
       if (cuotaLabelEl) cuotaLabelEl.textContent = ''
       if (resumenEl) resumenEl.style.display = 'none'
       return
     }
 
-    const { cuota, label } = calcularMontoCuota(monto, tasa, numCuotas, tipo, frecuencia)
-    const interesTotal = calcularInteresTotal(monto, tasa, numCuotas, tipo, frecuencia)
-    const totalPagar = monto + interesTotal
+    const { cuota, label } = calcularMontoCuota(monto, tasa, numCuotas ?? 1, tipo, frecuencia)
+    const interesTotal = numCuotas
+      ? calcularInteresTotal(monto, tasa, numCuotas, tipo, frecuencia)
+      : null  // indefinido: no podemos saber el total
 
     montoCuotasEl.value = fmtCRC(cuota)
-    if (cuotaLabelEl) cuotaLabelEl.textContent = label
+    if (cuotaLabelEl) {
+      cuotaLabelEl.textContent = numCuotas ? label : 'Interés por período (cuotas indefinidas)'
+    }
 
-    // Calcular fecha fin estimada
-    const fechaFin = fechaPrimer
+    // Calcular fecha fin (solo si hay num cuotas definidas)
+    const fechaFin = (numCuotas && fechaPrimer)
       ? calcularFechaFin(fechaPrimer, numCuotas, frecuencia)
       : null
 
@@ -203,22 +208,22 @@ export const initPrestamosController = (dom, store, appCtrl) => {
     if (resumenEl) {
       resumenEl.style.display = 'block'
       resumenEl.innerHTML = `
-        <div class="loan-summary-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; background: var(--color-primary-light, #eff6ff); border-radius: 12px; margin: 0 0 12px 0; border: 1px solid var(--color-primary, #2563eb)22;">
+        <div class="loan-summary-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px; background: var(--color-primary-light, #eff6ff); border-radius: 12px; margin: 0 0 12px 0; border-left: 3px solid var(--color-primary);">
           <div>
             <div style="font-size: 0.7rem; color: var(--color-text-light);">Capital</div>
             <div style="font-weight: 700; color: var(--color-primary);">${fmtCRC(monto)}</div>
           </div>
           <div>
             <div style="font-size: 0.7rem; color: var(--color-text-light);">Interés total</div>
-            <div style="font-weight: 700;">${fmtCRC(interesTotal)}</div>
+            <div style="font-weight: 700;">${interesTotal !== null ? fmtCRC(interesTotal) : '∞ (indefinido)'}</div>
           </div>
           <div>
             <div style="font-size: 0.7rem; color: var(--color-text-light);">Total a pagar</div>
-            <div style="font-weight: 700;">${fmtCRC(totalPagar)}</div>
+            <div style="font-weight: 700;">${interesTotal !== null ? fmtCRC(monto + interesTotal) : '∞ (indefinido)'}</div>
           </div>
           <div>
-            <div style="font-size: 0.7rem; color: var(--color-text-light);">Fecha fin estimada</div>
-            <div style="font-weight: 700;">${fechaFin ? formatDate(fechaFin, 'medium') : '—'}</div>
+            <div style="font-size: 0.7rem; color: var(--color-text-light);">Fecha fin</div>
+            <div style="font-weight: 700;">${fechaFin ? formatDate(fechaFin, 'medium') : numCuotas ? '—' : 'Indefinida'}</div>
           </div>
         </div>
       `
@@ -229,118 +234,100 @@ export const initPrestamosController = (dom, store, appCtrl) => {
   // 4. CREAR NUEVO PRÉSTAMO
   // ────────────────────────────────────────────────────────────────
 
-  if (formulario) {
-    const inputs = [elCliente, elMonto, elTasa, elTipo, elFrecuencia, elNumCuotas, elFechaInicio, elFechaPrimer]
+  // ────────────────────────────────────────────────────────────────
+  // 4. EVENT LISTENERS DE RECÁLCULO — nivel document (robusto)
+  // ────────────────────────────────────────────────────────────────
 
-    // Limpiar error al editar
-    inputs.forEach(getEl => {
-      const el = document.getElementById(getEl()?.id || '')
-      if (el) el.addEventListener('input', () => clearInputError(el))
-    })
+  const CAMPOS_RECALCULO = new Set([
+    'prestamo-monto', 'prestamo-tasa', 'prestamo-tipo',
+    'prestamo-frecuencia', 'prestamo-num-cuotas', 'prestamo-fecha-primer-pago'
+  ])
 
-      // Recalcular en cada cambio
-      ;[elMonto, elTasa, elTipo, elFrecuencia, elNumCuotas, elFechaPrimer].forEach(getEl => {
-        const idFn = () => {
-          // hay que obtenerlo después de que el DOM esté listo
-          const el = getEl()
-          if (el) {
-            el.addEventListener('input', actualizarCuotaEstimada)
-            el.addEventListener('change', actualizarCuotaEstimada)
-          }
-        }
-        idFn()
-      })
+  // Usar document para que funcione independientemente del estado del formulario
+  const _onFormInput = (e) => { if (CAMPOS_RECALCULO.has(e.target.id)) actualizarCuotaEstimada() }
+  const _onFormChange = (e) => { if (CAMPOS_RECALCULO.has(e.target.id)) actualizarCuotaEstimada() }
 
-    formulario.addEventListener('submit', async (e) => {
-      e.preventDefault()
+  document.addEventListener('input', _onFormInput)
+  document.addEventListener('change', _onFormChange)
 
-      // Leer valores
-      const clienteId = elCliente()?.value?.trim()
-      const monto = parseFloat(elMonto()?.value)
-      const tasa = parseFloat(elTasa()?.value)
-      const tipo = elTipo()?.value
-      const frecuencia = elFrecuencia()?.value
-      const numCuotas = parseInt(elNumCuotas()?.value, 10)
-      const fechaInicio = elFechaInicio()?.value
-      const fechaPrimer = elFechaPrimer()?.value
+  formulario.addEventListener('submit', async (e) => {
+    e.preventDefault()
 
-      // ── Validación inline ──────────────────────────────────────
-      let hasErrors = false
-      clearAllErrors([elCliente(), elMonto(), elTasa(), elTipo(), elFrecuencia(), elNumCuotas(), elFechaInicio(), elFechaPrimer()])
+    // Leer valores
+    const clienteId = elCliente()?.value?.trim()
+    const monto = parseFloat(elMonto()?.value)
+    const tasa = parseFloat(elTasa()?.value)
+    const tipo = elTipo()?.value
+    const frecuencia = elFrecuencia()?.value
+    const numCuotasRaw = elNumCuotas()?.value
+    const numCuotas = numCuotasRaw ? parseInt(numCuotasRaw, 10) : null  // null = indefinido
+    const fechaPrimer = elFechaPrimer()?.value
 
-      if (!clienteId) {
-        setInputError(elCliente(), 'Seleccione un cliente')
-        hasErrors = true
-      }
-      if (!monto || monto <= 0) {
-        setInputError(elMonto(), 'El monto debe ser mayor a 0')
-        hasErrors = true
-      }
-      if (isNaN(tasa) || tasa < 0) {
-        setInputError(elTasa(), 'Tasa de interés inválida')
-        hasErrors = true
-      }
-      if (!tipo) {
-        setInputError(elTipo(), 'Seleccione un tipo de amortización')
-        hasErrors = true
-      }
-      if (!frecuencia) {
-        setInputError(elFrecuencia(), 'Seleccione la frecuencia de pago')
-        hasErrors = true
-      }
-      if (!numCuotas || numCuotas < 1) {
-        setInputError(elNumCuotas(), 'Ingrese un número de cuotas válido (mínimo 1)')
-        hasErrors = true
-      }
-      if (!fechaInicio) {
-        setInputError(elFechaInicio(), 'La fecha de desembolso es requerida')
-        hasErrors = true
-      }
-      if (!fechaPrimer) {
-        setInputError(elFechaPrimer(), 'La fecha del primer pago es requerida')
-        hasErrors = true
-      }
-      if (fechaPrimer && fechaInicio && fechaPrimer < fechaInicio) {
-        setInputError(elFechaPrimer(), 'El primer pago debe ser posterior al desembolso')
-        hasErrors = true
-      }
+    // ── Validación inline ──────────────────────────────────────
+    let hasErrors = false
+    clearAllErrors([
+      elCliente(), elMonto(), elTasa(), elTipo(), elFrecuencia(), elFechaPrimer()
+    ])
 
-      if (hasErrors) return
+    if (!clienteId) {
+      setInputError(elCliente(), 'Seleccione un cliente')
+      hasErrors = true
+    }
+    if (!monto || monto <= 0) {
+      setInputError(elMonto(), 'El monto debe ser mayor a 0')
+      hasErrors = true
+    }
+    if (isNaN(tasa) || tasa < 0) {
+      setInputError(elTasa(), 'Tasa de interés inválida')
+      hasErrors = true
+    }
+    if (!tipo) {
+      setInputError(elTipo(), 'Seleccione un tipo de amortización')
+      hasErrors = true
+    }
+    if (!frecuencia) {
+      setInputError(elFrecuencia(), 'Seleccione la frecuencia de pago')
+      hasErrors = true
+    }
+    if (!fechaPrimer) {
+      setInputError(elFechaPrimer(), 'La fecha del primer pago es requerida')
+      hasErrors = true
+    }
 
-      // ── Calcular fecha_fin ────────────────────────────────────
-      const fechaFin = calcularFechaFin(fechaPrimer, numCuotas, frecuencia)
-      if (!fechaFin) {
-        showError('No se pudo calcular la fecha de fin del préstamo')
-        return
-      }
+    if (hasErrors) return
 
-      const nuevoPrestamo = {
-        cliente_id: clienteId,
-        monto_original: monto,
-        tasa_interes: tasa,
-        tipo_interes: tipo,
-        frecuencia_pago: frecuencia,
-        fecha_inicio: fechaInicio,
-        fecha_primer_pago: fechaPrimer,
-        fecha_fin: fechaFin,
-      }
+    // ── Calcular fecha_fin (null si es indefinido) ────────────
+    const fechaFin = (numCuotas && fechaPrimer)
+      ? calcularFechaFin(fechaPrimer, numCuotas, frecuencia)
+      : null
 
-      try {
-        store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
-        const guardado = await prestamosDataAdapter.save(nuevoPrestamo)
-        store.dispatch({ type: ACTION_TYPES.ADD_PRESTAMO, payload: guardado })
-        showSuccess('Préstamo creado exitosamente')
-        formulario.reset()
-        if (elResumen()) elResumen().style.display = 'none'
-        appCtrl.showView('prestamos')
-      } catch (err) {
-        console.error('[prestamosController] Save error:', err)
-        showError('Error: ' + err.message)
-      } finally {
-        store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
-      }
-    })
-  }
+    const nuevoPrestamo = {
+      cliente_id: clienteId,
+      monto_original: monto,
+      tasa_interes: tasa,
+      tipo_interes: tipo,
+      frecuencia_pago: frecuencia,
+      fecha_inicio: fechaPrimer,   // usamos primer pago como fecha de referencia
+      fecha_primer_pago: fechaPrimer,
+      fecha_fin: fechaFin,      // null si es indefinido
+      numero_cuotas: numCuotas,     // null si es indefinido
+    }
+
+    try {
+      store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
+      const guardado = await prestamosDataAdapter.save(nuevoPrestamo)
+      store.dispatch({ type: ACTION_TYPES.ADD_PRESTAMO, payload: guardado })
+      showSuccess('Préstamo creado exitosamente')
+      formulario.reset()
+      if (elResumen()) elResumen().style.display = 'none'
+      appCtrl.showView('prestamos')
+    } catch (err) {
+      console.error('[prestamosController] Save error:', err)
+      showError('Error: ' + err.message)
+    } finally {
+      store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: false })
+    }
+  })  // fin formulario.submit
 
   // ────────────────────────────────────────────────────────────────
   // 5. BOTÓN NUEVO
