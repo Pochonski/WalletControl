@@ -87,7 +87,7 @@ export const initClientesController = (dom, store, appCtrl) => {
           // MODO CREACIÓN
           // 1. Guardar primero para tener el ID (o usar temp ID si el adapter lo maneja)
           const guardado = await clientesDataAdapter.save(datos)
-          
+
           // 2. Subir archivos usando el ID real
           const uploadResults = await handleClientFileUploads(formulario, guardado.id, store)
           if (uploadResults.fotoRostro || uploadResults.cedulaFrente || uploadResults.cedulaReverso) {
@@ -101,7 +101,7 @@ export const initClientesController = (dom, store, appCtrl) => {
           } else {
             store.dispatch({ type: ACTION_TYPES.ADD_CLIENTE, payload: guardado })
           }
-          
+
           showSuccess('Cliente creado exitosamente')
         }
 
@@ -241,6 +241,13 @@ export const initClientesController = (dom, store, appCtrl) => {
       }
     }
 
+    // Preparar teléfonos y enlaces para WhatsApp y Llamadas
+    const rawPhone = cliente.telefono || ''
+    const cleanPhone = rawPhone.replace(/\D/g, '')
+    const waPhone = cleanPhone.length === 8 ? '506' + cleanPhone : cleanPhone
+    const whatsappHref = waPhone ? `https://wa.me/${waPhone}` : null
+    const callHref = waPhone ? `tel:+${waPhone}` : null
+
     detailContainer.innerHTML = `
       <div class="detail-header">
         <button class="btn-back-circle" id="btn-detail-back">
@@ -299,10 +306,18 @@ export const initClientesController = (dom, store, appCtrl) => {
         </div>
       </div>
 
-      <div class="detail-actions-bar">
-        <button class="btn btn-primary" id="btn-detail-prestamos">Ver Préstamos</button>
-        <button class="btn btn-secondary" id="btn-detail-editar">Editar perfil</button>
-        <button class="btn btn-danger" id="btn-detail-eliminar" style="flex: 0.5;">×</button>
+      <div class="detail-actions-bar" style="display:flex; flex-wrap:wrap; gap:8px;">
+        ${whatsappHref ? `
+          <a href="${whatsappHref}" target="_blank" class="btn-icon" style="background:#25D366; color:white; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.3); text-decoration: none; flex-shrink: 0;" title="WhatsApp">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+          </a>
+          <a href="${callHref}" class="btn-icon" style="background:#007bff; color:white; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3); text-decoration: none; flex-shrink: 0;" title="Llamar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          </a>
+        ` : ''}
+        <button class="btn btn-primary" id="btn-detail-prestamos" style="flex:1;">Préstamos</button>
+        <button class="btn btn-secondary" id="btn-detail-editar" style="flex:1;">Editar</button>
+        <button class="btn btn-danger" id="btn-detail-eliminar" style="flex: 0.15; min-width: 40px;">×</button>
       </div>
 
       ${cliente.telefono ? `
@@ -323,7 +338,7 @@ export const initClientesController = (dom, store, appCtrl) => {
 
     // Eventos
     detailContainer.querySelector('#btn-detail-back').onclick = () => appCtrl.showView('clientes')
-    
+
     detailContainer.querySelector('#btn-detail-prestamos').onclick = () => {
       appCtrl.showView('prestamos')
     }
@@ -341,7 +356,7 @@ export const initClientesController = (dom, store, appCtrl) => {
             store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
             const res = await clientesDataAdapter.delete(cliente.id)
             console.log('[clientesController] Delete SUCCESS in adapter:', res)
-            
+
             store.dispatch({ type: ACTION_TYPES.DELETE_CLIENTE, payload: cliente.id })
             showSuccess('Cliente eliminado correctamente')
             appCtrl.showView('clientes')
@@ -418,6 +433,12 @@ export const initClientesController = (dom, store, appCtrl) => {
         }
       }
 
+      // Preparar teléfonos y enlaces para WhatsApp de las tarjetas
+      const rawPhone = cliente.telefono || ''
+      const cleanPhone = rawPhone.replace(/\D/g, '')
+      const waPhone = cleanPhone.length === 8 ? '506' + cleanPhone : cleanPhone
+      const whatsappHref = waPhone ? `https://wa.me/${waPhone}` : null
+
       card.innerHTML = `
         ${photoHtml}
         <div class="card-body">
@@ -432,6 +453,11 @@ export const initClientesController = (dom, store, appCtrl) => {
         <div class="card-right">
           <span class="badge ${riesgoClass}">${cliente.nivel_riesgo || 'BAJO'}</span>
           <div style="display: flex; gap: 8px; margin-top: auto;">
+             ${whatsappHref ? `
+               <a href="${whatsappHref}" target="_blank" class="btn-icon" title="WhatsApp" style="color: #25D366; text-decoration: none;" onclick="event.stopPropagation()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+               </a>
+             ` : ''}
              <button class="btn-icon btn-editar" title="Editar">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
              </button>
@@ -456,13 +482,13 @@ export const initClientesController = (dom, store, appCtrl) => {
           e.preventDefault()
           e.stopPropagation()
           console.log('[clientesController] Deleting from list card, ID:', cliente.id)
-          
+
           if (confirm(`¿Estás seguro de que deseas eliminar permanentemente a "${cliente.nombre}"?`)) {
             try {
               store.dispatch({ type: ACTION_TYPES.SET_LOADING, payload: true })
               const res = await clientesDataAdapter.delete(cliente.id)
               console.log('[clientesController] Delete SUCCESS in adapter:', res)
-              
+
               store.dispatch({ type: ACTION_TYPES.DELETE_CLIENTE, payload: cliente.id })
               showSuccess('Cliente eliminado correctamente')
             } catch (err) {

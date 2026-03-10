@@ -23,11 +23,17 @@ import { initDashboardController } from './app/controllers/dashboardController.j
 import { initCobranzasListController } from './cobranzas/ui/cobranzasListController.js'
 import { initCobranzaDetailController } from './cobranzas/ui/cobranzaDetailController.js'
 import { initPagosController } from './pagos/ui/pagosController.js'
+import { initReportesController } from './reportes/ui/reportesController.js'
+import { initCreditosController } from './creditos/ui/creditosController.js'
+import { syncManager } from './sync/syncManager.js'
 import { DOM_IDS } from './app/ui/domIds.js'
 import { getEl } from './app/ui/domAdapter.js'
 
 // Inicializar orquestador de vistas y autenticación
 const appCtrl = initAppController(store)
+
+// Inicializar sync manager (detecta online/offline y procesa cola)
+syncManager.init(store)
 
 // Inicializar vista de login
 initLoginController(store, appCtrl)
@@ -78,3 +84,5 @@ initDashboardController(store, appCtrl)
 initCobranzasListController(domContext, store, appCtrl)
 initCobranzaDetailController(domContext, store, appCtrl)
 initPagosController(domContext, store, appCtrl)
+initReportesController(store, appCtrl)
+initCreditosController(store, appCtrl)

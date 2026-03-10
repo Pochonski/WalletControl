@@ -27,6 +27,10 @@ const VIEW_NAV_MAP = Object.freeze({
   cobranza:          DOM_IDS.NAV_COBRANZA,
   'cobranza-detail': DOM_IDS.NAV_COBRANZA,
   creditos:          DOM_IDS.NAV_CREDITOS,
+  'acreedor-form':   DOM_IDS.NAV_CREDITOS,
+  'credito-form':    DOM_IDS.NAV_CREDITOS,
+  'credito-detail':  DOM_IDS.NAV_CREDITOS,
+  'pago-credito-form': DOM_IDS.NAV_CREDITOS,
   reportes:          DOM_IDS.NAV_REPORTES,
 })
 
@@ -46,6 +50,10 @@ const VIEW_ID_MAP = Object.freeze({
   cobranza:          DOM_IDS.VIEW_COBRANZA,
   'cobranza-detail': DOM_IDS.VIEW_COBRANZA_DETAIL,
   creditos:          DOM_IDS.VIEW_CREDITOS,
+  'acreedor-form':   DOM_IDS.VIEW_ACREEDOR_FORM,
+  'credito-form':    DOM_IDS.VIEW_CREDITO_FORM,
+  'credito-detail':  DOM_IDS.VIEW_CREDITO_DETAIL,
+  'pago-credito-form': DOM_IDS.VIEW_PAGO_CREDITO_FORM,
   reportes:          DOM_IDS.VIEW_REPORTES,
 })
 
@@ -206,6 +214,10 @@ function _updateHeaderTitle(viewName) {
     cobranza:          'Cobranza',
     'cobranza-detail': 'Detalle cobranza',
     creditos:          'Créditos',
+    'acreedor-form':   'Nuevo acreedor',
+    'credito-form':    'Nuevo crédito',
+    'credito-detail':  'Detalle crédito',
+    'pago-credito-form': 'Registrar pago',
     reportes:          'Reportes',
   }
   setText(DOM_IDS.APP_TITLE, titles[viewName] ?? 'Prestamistas')
@@ -215,9 +227,13 @@ function _getParentView(viewName) {
   if (!viewName) return null
   if (viewName.includes('cliente')) return 'clientes'
   if (viewName.includes('prestamo')) return 'prestamos'
+  if (viewName.includes('pago-credito')) return 'credito-detail'
   if (viewName.includes('pago')) return 'pagos'
   if (viewName.includes('activo')) return 'activos'
   if (viewName.includes('cobranza')) return 'cobranza'
+  if (viewName === 'credito-detail') return 'creditos'
+  if (viewName === 'acreedor-form') return 'creditos'
+  if (viewName === 'credito-form') return 'creditos'
   return null
 }
 
