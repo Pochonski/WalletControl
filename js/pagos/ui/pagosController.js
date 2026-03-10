@@ -223,8 +223,8 @@ function _renderCuotaInfo() {
   }
 
   const fmt = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' })
-  const monto = _cuotaSeleccionada.monto_cuota
-    ? fmt.format(_cuotaSeleccionada.monto_cuota)
+  const monto = _cuotaSeleccionada.monto_total
+    ? fmt.format(_cuotaSeleccionada.monto_total)
     : '—'
   const vencimiento = _cuotaSeleccionada.fecha_vencimiento
     ? new Date(_cuotaSeleccionada.fecha_vencimiento + 'T00:00:00').toLocaleDateString('es-CR')
@@ -238,8 +238,8 @@ function _renderCuotaInfo() {
 
   // Pre-llenar monto del formulario
   const montoInput = getEl(DOM_IDS.PAGO_MONTO)
-  if (montoInput && _cuotaSeleccionada.monto_cuota) {
-    montoInput.value = _cuotaSeleccionada.monto_cuota
+  if (montoInput && _cuotaSeleccionada.monto_total) {
+    montoInput.value = _cuotaSeleccionada.monto_total
   }
 
   // Establecer fecha de hoy por defecto

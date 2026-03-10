@@ -29,7 +29,7 @@ export const pagosDataAdapter = {
           *,
           cuotas (
             numero_cuota,
-            monto_cuota,
+            monto_total,
             prestamo_id,
             prestamos (
               monto_original,
@@ -103,7 +103,7 @@ export const pagosDataAdapter = {
           *,
           cuotas (
             numero_cuota,
-            monto_cuota,
+            monto_total,
             prestamo_id,
             prestamos (
               monto_original,
@@ -119,7 +119,7 @@ export const pagosDataAdapter = {
       // Actualizar estado de la cuota a PAGADA
       await supabaseClient
         .from('cuotas')
-        .update({ estado: 'PAGADA', fecha_pago_real: pago.fecha_pago })
+        .update({ estado: 'PAGADA', fecha_pagada: pago.fecha_pago })
         .eq('id', pago.cuota_id)
 
       // Actualizar caché local
